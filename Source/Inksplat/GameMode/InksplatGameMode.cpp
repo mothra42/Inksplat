@@ -10,7 +10,7 @@ AInksplatGameMode::AInksplatGameMode()
 {
 	// set default pawn class to our Blueprinted character
 	//C:/Users/Battlestation One/Desktop/Active Projects/Inksplat/Content/FirstPersonCPP/Blueprints/FirstPersonCharacter.uasset
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPersonCPP/Blueprints/PlayerCharacter_BP"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/PlayerActor/Blueprints/PlayerCharacter_BP"));
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 	// use our custom HUD class
 	HUDClass = AInksplatHUD::StaticClass();
