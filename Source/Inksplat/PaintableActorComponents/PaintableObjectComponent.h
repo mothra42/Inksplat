@@ -8,6 +8,7 @@
 
 class UMaterialInstanceDynamic;
 class UTextureRenderTarget2D;
+class UMaterial;
 
 USTRUCT()
 struct FPaintInstructions
@@ -22,12 +23,12 @@ struct FPaintInstructions
 	UTextureRenderTarget2D* RenderTarget;
 
 	FPaintInstructions() {}
-	FPaintInstructions(const FVector InHitLocation,
-		const float InBrushRadius,
-		const UPrimitiveComponent* InMesh,
-		const UMaterialInstanceDynamic* InOriginalMaterial,
-		const UMaterialInstanceDynamic* InUnwrapMaterial,
-		const UTextureRenderTarget2D* InRenderTarget) 
+	FPaintInstructions( FVector InHitLocation,
+		 float InBrushRadius,
+		 UPrimitiveComponent* InMesh,
+		 UMaterialInstanceDynamic* InOriginalMaterial,
+		 UMaterialInstanceDynamic* InUnwrapMaterial,
+		 UTextureRenderTarget2D* InRenderTarget) 
 			:HitLocation(InHitLocation), BrushRadius(InBrushRadius), Mesh(InMesh),
 				OriginalMaterial(InOriginalMaterial), UnwrapMaterial(UnwrapMaterial),
 				RenderTarget(InRenderTarget)
@@ -47,9 +48,23 @@ class INKSPLAT_API UPaintableObjectComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
+protected:
+	UPrimitiveComponent* MeshToPaint;
+	UTextureRenderTarget2D* PaintMask;
+	UMaterialInstanceDynamic* OriginalMaterial;
+	UMaterialInstanceDynamic* UnwrapMaterial;
+
 public:	
 	// Sets default values for this component's properties
 	UPaintableObjectComponent();
+
+
+	//Responsible for setting initial values and also setting up mesh with proper textures.
+	UFUNCTION(BlueprintCallable)
+	void SetupPaintableObject(
+		UPrimitiveComponent* MeshToSet,
+		UMaterial* OriginalMaterialParent
+	);
 
 	// Enqueue's Paint Instructions based on hit location from projectile
 	//TODO revisit this to hold color information too
@@ -59,5 +74,5 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	UTextureRenderTarget2D* PaintMask;
+	
 };

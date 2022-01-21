@@ -24,7 +24,7 @@ class INKSPLAT_API APaintApplyingCapture : public AActor
 
 	UPROPERTY(EditDefaultsOnly, Category = BackgroundPlane)
 	UStaticMeshComponent* BackgroundPlane;
-	
+
 public:	
 	// Sets default values for this actor's properties
 	APaintApplyingCapture();
