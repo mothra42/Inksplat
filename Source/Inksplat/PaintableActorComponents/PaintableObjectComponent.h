@@ -8,6 +8,7 @@
 
 class UMaterialInstanceDynamic;
 class UTextureRenderTarget2D;
+class APaintApplyingCapture;
 class UMaterial;
 
 USTRUCT()
@@ -23,7 +24,8 @@ struct FPaintInstructions
 	UTextureRenderTarget2D* RenderTarget;
 
 	FPaintInstructions() {}
-	FPaintInstructions( FVector InHitLocation,
+	FPaintInstructions( 
+		 FVector InHitLocation,
 		 float InBrushRadius,
 		 UPrimitiveComponent* InMesh,
 		 UMaterialInstanceDynamic* InOriginalMaterial,
@@ -52,12 +54,13 @@ protected:
 	UPrimitiveComponent* MeshToPaint;
 	UTextureRenderTarget2D* PaintMask;
 	UMaterialInstanceDynamic* OriginalMaterial;
+
+	UPROPERTY(VisibleAnywhere)
 	UMaterialInstanceDynamic* UnwrapMaterial;
 
 public:	
 	// Sets default values for this component's properties
 	UPaintableObjectComponent();
-
 
 	//Responsible for setting initial values and also setting up mesh with proper textures.
 	UFUNCTION(BlueprintCallable)
@@ -66,13 +69,23 @@ public:
 		UMaterial* OriginalMaterialParent
 	);
 
-	// Enqueue's Paint Instructions based on hit location from projectile
-	//TODO revisit this to hold color information too
-	void EnqueuePaintInstructions(FVector HitLocation, float BrushRadius, TQueue<FPaintInstructions> PaintQueue);
+	/*Looks for queue with the fewest jobs in it and chooses it.
+	* If for some reason a queue can't be found it this method returns false
+	* */
+	bool FindAvailablePaintQueue(const FHitResult& HitResult, const float& BrushRadius);
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+private:
+	// Enqueue's Paint Instructions based on hit location from projectile
+	//TODO revisit this to hold color information too
+	void EnqueuePaintInstructions(
+		const FVector& InHitLocation, 
+		const float& BrushRadius, 
+		TQueue<FPaintInstructions>& PaintQueue, 
+		APaintApplyingCapture* Capture
+	);
 	
 };

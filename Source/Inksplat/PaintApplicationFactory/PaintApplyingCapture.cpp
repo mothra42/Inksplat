@@ -36,6 +36,36 @@ void APaintApplyingCapture::BeginPlay()
 	
 }
 
+void APaintApplyingCapture::BeginConsumingPaintingJobs()
+{
+	if (!bIsConsuming)
+	{
+		ConsumePaintingJobs();
+	}
+}
+
+void APaintApplyingCapture::ConsumePaintingJobs()
+{
+	bIsConsuming = true;
+	FPaintInstructions PaintInstructions;
+
+	while (!PaintingQueue.IsEmpty())
+	{
+		PaintingQueue.Dequeue(PaintInstructions);
+		DecrementJobs();
+		PaintActor(
+			PaintInstructions.HitLocation,
+			PaintInstructions.BrushRadius,
+			PaintInstructions.Mesh,
+			PaintInstructions.OriginalMaterial,
+			PaintInstructions.UnwrapMaterial,
+			PaintInstructions.RenderTarget
+		);
+	}
+
+	bIsConsuming = false;
+}
+
 void APaintApplyingCapture::PaintActor(FVector HitLocation,
 	float BrushRadius,
 	UPrimitiveComponent* Mesh,
@@ -47,10 +77,17 @@ void APaintApplyingCapture::PaintActor(FVector HitLocation,
 	CaptureComponent->TextureTarget = RenderTarget;
 
 	//Setup UnwrapMaterial
-	UnwrapMaterial->SetVectorParameterValue(FName("UnwrapLocation"), FLinearColor(GetActorLocation()));
-	UnwrapMaterial->SetVectorParameterValue(FName("HitLocation"), FLinearColor(HitLocation));
-	UnwrapMaterial->SetScalarParameterValue(FName("CaptureSize"), CaptureComponent->OrthoWidth);
-	UnwrapMaterial->SetScalarParameterValue(FName("BrushRadius"), BrushRadius);
+	if (UnwrapMaterial != nullptr)
+	{
+		UnwrapMaterial->SetVectorParameterValue(FName("UnwrapLocation"), FLinearColor(GetActorLocation()));
+		UnwrapMaterial->SetVectorParameterValue(FName("HitLocation"), FLinearColor(HitLocation));
+		UnwrapMaterial->SetScalarParameterValue(FName("CaptureSize"), CaptureComponent->OrthoWidth);
+		UnwrapMaterial->SetScalarParameterValue(FName("BrushRadius"), BrushRadius);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Unwrap Material is null"));
+	}
 
 	//Capture UnwrappedMaterial
 	Mesh->SetMaterial(0, UnwrapMaterial);
@@ -58,3 +95,12 @@ void APaintApplyingCapture::PaintActor(FVector HitLocation,
 	Mesh->SetMaterial(0, OriginalMaterial);
 }
 
+TQueue<FPaintInstructions>& APaintApplyingCapture::GetPaintingQueue()
+{
+	return PaintingQueue;
+}
+
+int32 APaintApplyingCapture::GetNumOfJobsInQueue()
+{
+	return NumJobsInQueue;
+}

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "../PaintableActorComponents/PaintableObjectComponent.h"
 #include "PaintApplyingCapture.generated.h"
 
 class USceneCaptureComponent2D;
@@ -41,4 +42,26 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+private:
+	TQueue<FPaintInstructions> PaintingQueue;
+
+	int32 NumJobsInQueue = 0;
+
+	bool bIsConsuming = false;
+
+//Queue related functions
+public:
+	TQueue<FPaintInstructions>& GetPaintingQueue();
+
+	//command  to start consuming painting jobs if consumption isn't already in progress.
+	void BeginConsumingPaintingJobs();
+
+	int32 GetNumOfJobsInQueue();
+
+	int32 IncrementJobs() { return ++NumJobsInQueue;}
+
+	int32 DecrementJobs() { return --NumJobsInQueue; }
+
+private:
+	void ConsumePaintingJobs();
 };
