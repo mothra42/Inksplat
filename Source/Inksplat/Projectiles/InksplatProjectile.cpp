@@ -2,6 +2,7 @@
 
 #include "InksplatProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "../PaintableActorComponents/PaintableObjectComponent.h"
 #include "Components/SphereComponent.h"
 
 AInksplatProjectile::AInksplatProjectile() 
@@ -34,6 +35,12 @@ AInksplatProjectile::AInksplatProjectile()
 void AInksplatProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Only add impulse and destroy projectile if we hit a physics
+	UPaintableObjectComponent* PaintableObjectComp = Cast<UPaintableObjectComponent>(OtherActor->FindComponentByClass(UPaintableObjectComponent::StaticClass()));
+	if (PaintableObjectComp != nullptr)
+	{	
+		PaintableObjectComp->FindAvailablePaintQueue(Hit, 10.0f);
+	}
+
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
