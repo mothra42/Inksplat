@@ -58,7 +58,7 @@ APlayerCharacter::APlayerCharacter()
 	//Painting setup
 	PaintableObjectComponent = CreateDefaultSubobject<UPaintableObjectComponent>(TEXT("PaintableObjectComponent"));
 	static ConstructorHelpers::FObjectFinder<UMaterial> PaintableMaterialObjectFinder(
-		TEXT("/Game/PaintApplicationFactory/Materials/M_PaintableMaterial")
+		TEXT("/Game/PaintApplicationFactory/Materials/M_PaintableMaterial_Skeletal")
 	);
 	PaintableMaterialParent = PaintableMaterialObjectFinder.Object;
 }

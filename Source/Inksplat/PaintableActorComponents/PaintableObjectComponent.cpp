@@ -20,8 +20,7 @@ UPaintableObjectComponent::UPaintableObjectComponent()
 	static ConstructorHelpers::FObjectFinder<UMaterial> UnwrapMaterialObjectFinder(
 		TEXT("/Game/PaintApplicationFactory/Materials/M_Unwrap")
 	);
-	UMaterial* UnwrapParent = UnwrapMaterialObjectFinder.Object;
-	UnwrapMaterial = UMaterialInstanceDynamic::Create(UnwrapParent, NULL);
+	UnwrapParent = UnwrapMaterialObjectFinder.Object;
 }
 
 
@@ -37,8 +36,9 @@ void UPaintableObjectComponent::SetupPaintableObject(
 	UMaterial* OriginalMaterialParent)
 {
 	MeshToPaint = MeshToSet;
-	OriginalMaterial = UMaterialInstanceDynamic::Create(OriginalMaterialParent, MeshToPaint);
+	OriginalMaterial = UMaterialInstanceDynamic::Create(OriginalMaterialParent, this);
 	OriginalMaterial->SetTextureParameterValue(FName("OpacityMask"), PaintMask);
+	UnwrapMaterial = UMaterialInstanceDynamic::Create(UnwrapParent, this);
 	MeshToPaint->SetMaterial(0, OriginalMaterial);
 }
 

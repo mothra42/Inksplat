@@ -32,7 +32,7 @@ struct FPaintInstructions
 		 UMaterialInstanceDynamic* InUnwrapMaterial,
 		 UTextureRenderTarget2D* InRenderTarget) 
 			:HitLocation(InHitLocation), BrushRadius(InBrushRadius), Mesh(InMesh),
-				OriginalMaterial(InOriginalMaterial), UnwrapMaterial(UnwrapMaterial),
+				OriginalMaterial(InOriginalMaterial), UnwrapMaterial(InUnwrapMaterial),
 				RenderTarget(InRenderTarget)
 	{
 	}
@@ -54,6 +54,8 @@ protected:
 	UPrimitiveComponent* MeshToPaint;
 	UTextureRenderTarget2D* PaintMask;
 	UMaterialInstanceDynamic* OriginalMaterial;
+
+	UMaterial* UnwrapParent;
 
 	UPROPERTY(VisibleAnywhere)
 	UMaterialInstanceDynamic* UnwrapMaterial;
