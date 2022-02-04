@@ -5,6 +5,9 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetRenderingLibrary.h"
+#include "Engine/Canvas.h"
 
 UPaintableStaticMeshComponent::UPaintableStaticMeshComponent()
 {
@@ -37,4 +40,32 @@ void UPaintableStaticMeshComponent::BeginPlay()
 
 	MeshMaterialInstance->SetTextureParameterValue(FName("ColorMap"), PaintTexture);
 	SetMaterial(0, MeshMaterialInstance);
+}
+
+bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLinearColor& Color)
+{
+	UCanvas* Canvas;
+	FVector2D CanvasSize;
+	FDrawToRenderTargetContext Context;
+
+	FVector2D UVPosition;
+	UGameplayStatics::FindCollisionUV(Hit, 0, UVPosition);
+
+
+	UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, PaintTexture, Canvas, CanvasSize, Context);
+
+	//TODO make this work for textures as well. Will probably need to include one in the constructor.
+	//probably refactor this to exist in its own function
+	UE_LOG(LogTemp, Warning, TEXT("Canvas Size %s"), *CanvasSize.ToString());
+	FVector2D TileItemPosition = CanvasSize * UVPosition;
+	FCanvasTileItem RectItem(
+		TileItemPosition,
+		FVector2D(25.f, 25.f), //size
+		Color
+	);
+
+	Canvas->DrawItem(RectItem);
+	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
+	//Canvas->DrawTexture
+	return true;
 }

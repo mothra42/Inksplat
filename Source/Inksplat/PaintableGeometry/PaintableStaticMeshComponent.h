@@ -18,9 +18,12 @@ public:
 	UPaintableStaticMeshComponent();
 
 public:
-	class UTextureRenderTarget2D* PaintTexture;
+	//returns true if successfuly draws to mesh
+	bool PaintMesh(const FHitResult& Hit, const FLinearColor& Color);
 
 protected:
+	class UTextureRenderTarget2D* PaintTexture;
+
 	class UMaterial* ParentMaterial;
 
 	class UMaterialInstanceDynamic* MeshMaterialInstance;
