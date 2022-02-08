@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(meta = (BlueprintSpawnableComponent))
 class INKSPLAT_API UPaintableStaticMeshComponent : public UStaticMeshComponent
 {
 	GENERATED_BODY()

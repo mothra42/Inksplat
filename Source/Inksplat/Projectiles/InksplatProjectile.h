@@ -32,6 +32,11 @@ protected:
 		FVector NormalImpulse, 
 		const FHitResult& Hit
 	);
+
+	virtual void Destroyed() override;
+
+	//Paint the actor should only occur locally and not in server
+	void PaintActor(const FHitResult& Hit);
 public:
 	AInksplatProjectile();
 

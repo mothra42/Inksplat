@@ -56,7 +56,6 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 
 	//TODO make this work for textures as well. Will probably need to include one in the constructor.
 	//probably refactor this to exist in its own function
-	UE_LOG(LogTemp, Warning, TEXT("Canvas Size %s"), *CanvasSize.ToString());
 	FVector2D TileItemPosition = CanvasSize * UVPosition;
 	FCanvasTileItem RectItem(
 		TileItemPosition,

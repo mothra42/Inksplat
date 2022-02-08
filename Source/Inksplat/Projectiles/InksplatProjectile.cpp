@@ -3,7 +3,11 @@
 #include "InksplatProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "../PaintableActorComponents/PaintableObjectComponent.h"
+#include "../PaintableGeometry/PaintableActorBase.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "DrawDebugHelpers.h"
 
 AInksplatProjectile::AInksplatProjectile() 
 {
@@ -42,36 +46,45 @@ AInksplatProjectile::AInksplatProjectile()
 
 void AInksplatProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	UPaintableObjectComponent* PaintableObjectComp = Cast<UPaintableObjectComponent>(OtherActor->FindComponentByClass(UPaintableObjectComponent::StaticClass()));
-	if (PaintableObjectComp != nullptr)
-	{
-		PaintableObjectComp->FindAvailablePaintQueue(Hit, 1.0f);
-		UE_LOG(LogTemp, Warning, TEXT("Actor hit is %s"), *OtherActor->GetName());
-	}
 
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-
+		PaintActor(Hit);
 		Destroy();
 	}
 }
 
-void AInksplatProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AInksplatProjectile::Destroyed()
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	UPaintableObjectComponent* PaintableObjectComp = Cast<UPaintableObjectComponent>(OtherActor->FindComponentByClass(UPaintableObjectComponent::StaticClass()));
-	if (PaintableObjectComp != nullptr)
-	{	
-		PaintableObjectComp->FindAvailablePaintQueue(Hit, 1.0f);
-		UE_LOG(LogTemp, Warning, TEXT("Actor hit is %s"), *OtherActor->GetName());
-	}
+	UE_LOG(LogTemp, Warning, TEXT("Destroyed"));
+	
+	//need to think about where this function runs and its role
+	//PaintActor();
+	//TODO make paint particle effect spawn here.
+}
 
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+void AInksplatProjectile::PaintActor(const FHitResult& Hit)
+{
+	FVector TraceBeginLocation = GetActorLocation();
+	FVector TraceDirection = UKismetMathLibrary::GetDirectionUnitVector(TraceBeginLocation, Hit.Location);
+	FVector TraceEndLocation = TraceBeginLocation + 100 * TraceDirection;
+
+	FHitResult LineTraceHit;
+	FCollisionQueryParams TraceParams;
+	TraceParams.bTraceComplex = true;
+	TraceParams.AddIgnoredActor(this);
+	TraceParams.bReturnFaceIndex = true;
+	GetWorld()->LineTraceSingleByChannel(
+		LineTraceHit,
+		TraceBeginLocation,
+		TraceEndLocation,
+		ECC_Visibility,
+		TraceParams
+	);
+
+	APaintableActorBase* PaintableActor = Cast<APaintableActorBase>(LineTraceHit.Actor);
+	if (PaintableActor)
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-
-		Destroy();
+		PaintableActor->PaintActor(LineTraceHit, FLinearColor::Blue);
 	}
 }
