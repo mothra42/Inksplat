@@ -56,11 +56,11 @@ APlayerCharacter::APlayerCharacter()
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
 	
 	//Painting setup
-	PaintableObjectComponent = CreateDefaultSubobject<UPaintableObjectComponent>(TEXT("PaintableObjectComponent"));
-	static ConstructorHelpers::FObjectFinder<UMaterial> PaintableMaterialObjectFinder(
-		TEXT("/Game/PaintApplicationFactory/Materials/M_PaintableMaterial_Skeletal")
-	);
-	PaintableMaterialParent = PaintableMaterialObjectFinder.Object;
+	//PaintableObjectComponent = CreateDefaultSubobject<UPaintableObjectComponent>(TEXT("PaintableObjectComponent"));
+	//static ConstructorHelpers::FObjectFinder<UMaterial> PaintableMaterialObjectFinder(
+	//	TEXT("/Game/PaintApplicationFactory/Materials/M_PaintableMaterial_Skeletal")
+	//);
+	//PaintableMaterialParent = PaintableMaterialObjectFinder.Object;
 }
 
 void APlayerCharacter::BeginPlay()
@@ -68,19 +68,10 @@ void APlayerCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
-	SetupPaintableObjectComponent(Mesh1P);
+	//SetupPaintableObjectComponent(Mesh1P);
 
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
 	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
-}
-
-void APlayerCharacter::SetupPaintableObjectComponent(UPrimitiveComponent* MeshToSet)
-{
-	//TODO make this the full mesh that other player's would see, not the first person mesh
-	//IPaintableObjectInterface::SetupPaintableObjectComponent(MeshToSet);
-	
-	//Sets the mesh to have the correct instance.
-	PaintableObjectComponent->SetupPaintableObject(MeshToSet, PaintableMaterialParent);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -97,6 +88,7 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerCharacter::OnFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &APlayerCharacter::OnFireStopped);
 
 	// Bind movement events
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
@@ -113,40 +105,115 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 void APlayerCharacter::OnFire()
 {
-	// try and fire a projectile
-	if (ProjectileClass != nullptr)
+	if (ProjectileClass != nullptr && bCanFire)
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
-		{
-			const FRotator SpawnRotation = GetControlRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
-			// spawn the projectile at the muzzle
-			World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-		}
+		bIsFiring = true;
+		bCanFire = false;
+		HandleFire();
 	}
+	//// try and fire a projectile
+	//if (ProjectileClass != nullptr)
+	//{
+	//	UWorld* const World = GetWorld();
+	//	if (World != nullptr)
+	//	{
+	//		const FRotator SpawnRotation = GetControlRotation();
+	//		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+	//		const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+	//
+	//		//Set Spawn Collision Handling Override
+	//		FActorSpawnParameters ActorSpawnParams;
+	//		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+	//
+	//		// spawn the projectile at the muzzle
+	//		World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+	//	}
+	//}
+	//
+	//// try and play the sound if specified
+	//if (FireSound != nullptr)
+	//{
+	//	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+	//}
+	//
+	//// try and play a firing animation if specified
+	//if (FireAnimation != nullptr)
+	//{
+	//	// Get the animation object for the arms mesh
+	//	UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
+	//	if (AnimInstance != nullptr)
+	//	{
+	//		AnimInstance->Montage_Play(FireAnimation, 1.f);
+	//	}
+	//}
+}
 
-	// try and play the sound if specified
-	if (FireSound != nullptr)
+void APlayerCharacter::OnFireStopped()
+{
+	bIsFiring = false;
+	HandleFire();
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle_FireCooldownPeriod,
+		this,
+		&APlayerCharacter::ResetAfterCooldown,
+		FireCooldownPeriod,
+		false
+	);
+}
+
+void APlayerCharacter::ResetAfterCooldown()
+{
+	bCanFire = true;
+}
+
+void APlayerCharacter::HandleFire_Implementation()
+{
+	UWorld* World = GetWorld();
+	//if (World != nullptr && GetLocalRole() == ROLE_Authority)
+	//{
+	//	const FRotator SpawnRotation = GetControlRotation();
+	//	// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+	//	const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+	//
+	//	FActorSpawnParameters SpawnParameters;
+	//	SpawnParameters.Instigator = GetInstigator();
+	//	SpawnParameters.Owner = this;
+	//
+	//	// spawn the projectile at the muzzle
+	//	World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
+	//}
+
+	if (bIsFiring)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+		World->GetTimerManager().SetTimer(
+			TimerHandle_TimeBetweenProjectiles,
+			this,
+			&APlayerCharacter::SpawnProjectile,
+			TimeBetweenProjectiles,
+			true
+			);
 	}
-
-	// try and play a firing animation if specified
-	if (FireAnimation != nullptr)
+	else
 	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
+		World->GetTimerManager().ClearTimer(TimerHandle_TimeBetweenProjectiles);
+	}
+}
+
+void APlayerCharacter::SpawnProjectile()
+{
+	UWorld* const World = GetWorld();
+	if (World != nullptr)// && GetLocalRole() == ROLE_Authority)
+	{
+		const FRotator SpawnRotation = GetControlRotation();
+		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+		const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.Instigator = GetInstigator();
+		SpawnParameters.Owner = this;
+
+		// spawn the projectile at the muzzle
+		World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
 	}
 }
 

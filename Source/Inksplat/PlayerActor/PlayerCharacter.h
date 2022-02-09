@@ -18,7 +18,7 @@ class UAnimMontage;
 class USoundBase;
 
 UCLASS(config=Game)
-class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
+class APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -74,11 +74,34 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* FireAnimation;
 
+//Methods related to firing
 protected:
-	
+
+	//TODO ideally these methods are tied to specific weapon classes that determine fire properties
 	/** Fires a projectile. */
 	void OnFire();
 
+	void OnFireStopped();
+
+	void ResetAfterCooldown();
+
+	/** Server function for spawning projectiles.*/
+	UFUNCTION(Server, Reliable)
+	void HandleFire();
+
+	void SpawnProjectile();
+
+	bool bIsFiring = false;
+
+	bool bCanFire = true;
+
+	float TimeBetweenProjectiles = 0.1f;
+	FTimerHandle TimerHandle_TimeBetweenProjectiles;
+
+	float FireCooldownPeriod = 0.25f;
+	FTimerHandle TimerHandle_FireCooldownPeriod;
+
+protected:
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);
 
@@ -101,8 +124,6 @@ protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
-
-	virtual void SetupPaintableObjectComponent(UPrimitiveComponent* MeshToSet);
 
 public:
 	/** Returns Mesh1P subobject **/
