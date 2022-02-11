@@ -56,7 +56,6 @@ void AInksplatProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, 
 
 void AInksplatProjectile::Destroyed()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Destroyed"));
 	
 	//need to think about where this function runs and its role
 	//PaintActor();

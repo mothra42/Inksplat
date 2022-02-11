@@ -87,11 +87,9 @@ protected:
 
 	/** Server function for spawning projectiles.*/
 	UFUNCTION(Server, Reliable)
-	void HandleFire();
+	void HandleFire(bool bShouldFire);
 
 	void SpawnProjectile();
-
-	bool bIsFiring = false;
 
 	bool bCanFire = true;
 

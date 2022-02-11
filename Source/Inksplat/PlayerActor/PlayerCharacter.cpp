@@ -10,6 +10,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -105,11 +106,12 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 void APlayerCharacter::OnFire()
 {
+	FString DebugMessage = FString::Printf(TEXT("%s, is firing"), *this->GetName());
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, DebugMessage);
 	if (ProjectileClass != nullptr && bCanFire)
 	{
-		bIsFiring = true;
 		bCanFire = false;
-		HandleFire();
+		HandleFire(true);
 	}
 	//// try and fire a projectile
 	//if (ProjectileClass != nullptr)
@@ -150,8 +152,7 @@ void APlayerCharacter::OnFire()
 
 void APlayerCharacter::OnFireStopped()
 {
-	bIsFiring = false;
-	HandleFire();
+	HandleFire(false);
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle_FireCooldownPeriod,
 		this,
@@ -166,54 +167,48 @@ void APlayerCharacter::ResetAfterCooldown()
 	bCanFire = true;
 }
 
-void APlayerCharacter::HandleFire_Implementation()
+void APlayerCharacter::HandleFire_Implementation(bool bShouldFire)
 {
 	UWorld* World = GetWorld();
-	//if (World != nullptr && GetLocalRole() == ROLE_Authority)
-	//{
-	//	const FRotator SpawnRotation = GetControlRotation();
-	//	// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-	//	const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-	//
-	//	FActorSpawnParameters SpawnParameters;
-	//	SpawnParameters.Instigator = GetInstigator();
-	//	SpawnParameters.Owner = this;
-	//
-	//	// spawn the projectile at the muzzle
-	//	World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
-	//}
-
-	if (bIsFiring)
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		World->GetTimerManager().SetTimer(
-			TimerHandle_TimeBetweenProjectiles,
-			this,
-			&APlayerCharacter::SpawnProjectile,
-			TimeBetweenProjectiles,
-			true
+		if (bShouldFire)
+		{
+			FString EngineMessage = FString("About to run timed method on server");
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, EngineMessage);
+			World->GetTimerManager().SetTimer(
+				TimerHandle_TimeBetweenProjectiles,
+				this,
+				&APlayerCharacter::SpawnProjectile,
+				TimeBetweenProjectiles,
+				true
 			);
-	}
-	else
-	{
-		World->GetTimerManager().ClearTimer(TimerHandle_TimeBetweenProjectiles);
+		}
+		else
+		{
+			World->GetTimerManager().ClearTimer(TimerHandle_TimeBetweenProjectiles);
+		}
 	}
 }
 
 void APlayerCharacter::SpawnProjectile()
 {
-	UWorld* const World = GetWorld();
-	if (World != nullptr)// && GetLocalRole() == ROLE_Authority)
+	if (HasAuthority())
 	{
-		const FRotator SpawnRotation = GetControlRotation();
-		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-		const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+		UWorld* const World = GetWorld();
+		if (World != nullptr)// && GetLocalRole() == ROLE_Authority)
+		{
+			const FRotator SpawnRotation = GetControlRotation();
+			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
-		FActorSpawnParameters SpawnParameters;
-		SpawnParameters.Instigator = GetInstigator();
-		SpawnParameters.Owner = this;
+			FActorSpawnParameters SpawnParameters;
+			SpawnParameters.Instigator = GetInstigator();
+			SpawnParameters.Owner = this;
 
-		// spawn the projectile at the muzzle
-		World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
+			// spawn the projectile at the muzzle
+			World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
+		}
 	}
 }
 
