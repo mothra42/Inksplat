@@ -3,6 +3,7 @@
 
 #include "PaintableActorBase.h"
 #include "PaintableStaticMeshComponent.h"
+#include "../PaintableActorComponents/PaintableSkeletalMeshComponent.h"
 
 // Sets default values
 APaintableActorBase::APaintableActorBase()
@@ -32,9 +33,13 @@ void APaintableActorBase::PaintActor(const FHitResult& Hit, const FLinearColor& 
 {
 	UE_LOG(LogTemp, Warning, TEXT("Attempting to paint actor"));
 	UPaintableStaticMeshComponent* HitStaticMeshComp = Cast<UPaintableStaticMeshComponent>(Hit.Component);
-
+	UPaintableSkeletalMeshComponent* HitSkeletalMeshComp = Cast<UPaintableSkeletalMeshComponent>(Hit.Component);
 	if (HitStaticMeshComp)
 	{
 		HitStaticMeshComp->PaintMesh(Hit, Color);
+	}
+	else if (HitSkeletalMeshComp)
+	{
+		HitSkeletalMeshComp->PaintMesh(Hit, Color);
 	}
 }
