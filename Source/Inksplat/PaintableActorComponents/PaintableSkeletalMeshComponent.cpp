@@ -22,12 +22,14 @@ UPaintableSkeletalMeshComponent::UPaintableSkeletalMeshComponent()
 	{
 		ParentMaterial = PaintableMaterialFinder.Object;
 	}
+
+	PaintCoverageArray.Init(0, 2048);
 }
 
 void UPaintableSkeletalMeshComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	PaintCoverageArray.Init(0, 1048576);
+
 	FLinearColor ClearColor = FLinearColor(0.0, 0.0, 0.0, 0.0);
 	PaintTexture = UKismetRenderingLibrary::CreateRenderTarget2D(
 		GetWorld(),
@@ -69,13 +71,12 @@ bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLi
 	FVector2D TileItemPosition = CanvasSize * UVPosition;
 	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
-		//HealthCheckQueue.Enqueue(FHealthCheckInstructions(TileItemPosition, 25, 25));
-		//ConsumeHealthCheckQueue();
-		CalculateHealth(TileItemPosition, 25, 25);
+		CalculateHealth(TileItemPosition);
 	}
+
 	FCanvasTileItem RectItem(
 		TileItemPosition,
-		FVector2D(25.f, 25.f), //size
+		FVector2D(22.62, 22.62), //size
 		Color
 	);
 
@@ -84,57 +85,26 @@ bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLi
 	return true;
 }
 
-void UPaintableSkeletalMeshComponent::ConsumeHealthCheckQueue()
-{
-	if (!bIsConsumingHealthCheck)
-	{
-		bIsConsumingHealthCheck = true;
-		while (!HealthCheckQueue.IsEmpty())
-		{
-			FHealthCheckInstructions CurrentInstructions;
-			if (HealthCheckQueue.Dequeue(CurrentInstructions))
-			{
-				CalculateHealth(CurrentInstructions.Origin, CurrentInstructions.UBounds, CurrentInstructions.VBounds);
-			}
-		}
-
-		bIsConsumingHealthCheck = false;
-	}
-}
-
 //TODO Consider adding a fourth argument that is a reference to a reference texture to check for the bounds of the UV map
-float UPaintableSkeletalMeshComponent::CalculateHealth(FVector2D Origin, int32 U_Bounds, int32 V_Bounds)
+int32 UPaintableSkeletalMeshComponent::CalculateHealth(FVector2D Origin)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Starting calculate"));
-	int U = Origin.X - (U_Bounds/2);
-	int UEnd = Origin.X + (U_Bounds / 2);
-	int V = Origin.Y - (V_Bounds/2);
-	int VEnd = Origin.Y + (V_Bounds / 2);
-	int32 NewColoredPixelCount = 0;
-	while (U <= UEnd)
+	/*A Note on some magic numbers being used. 1024 is the size of the texture both U and V.
+	* 1024 * 1024 is 1048576. If I paint squares that are 22.62 X 22.62 then the total pixel count is 512
+	* 1048567 / 512 is 2048. So there are 2048 distinct tiles of 512 pixels. Which is where these numbers come from.
+	* TODO codify these magic numbers into actual expressions.
+	*/
+	int32 PaintedTile = (Origin.X + Origin.Y * 1024) / 512;
+	if (PaintedTile < 0 || PaintedTile >= 2048)
 	{
-		while (V <= VEnd)
-		{
-			if (U < 0 || V < 0 || U > 1024 || V > 1024)
-			{
-				V++;
-				continue;
-			}
-			else if (PaintCoverageArray[U + V * 1024] == 0)
-			{
-				NewColoredPixelCount++;
-				UE_LOG(LogTemp, Warning, TEXT("NewColor Pixel Count is %i"), NewColoredPixelCount);
-				PaintCoverageArray[U + V * 1024] = 1;
-			}
-
-			V++;
-		}
-		V = Origin.Y - (V_Bounds / 2);
-		U++;
+		UE_LOG(LogTemp, Warning, TEXT("Invalid Tile"));
+		return NumPaintedTiles;
+	}
+	else if(!PaintCoverageArray[PaintedTile])
+	{
+		NumPaintedTiles++;
+		PaintCoverageArray[PaintedTile] = 1;
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("New colored pixels should be around 625 and is %i"), NewColoredPixelCount);
-	UE_LOG(LogTemp, Warning, TEXT("Finishing Calculate"));
-	return 0.0f;
+	return NumPaintedTiles;
 }
 

@@ -6,23 +6,6 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "PaintableSkeletalMeshComponent.generated.h"
 
-USTRUCT()
-struct FHealthCheckInstructions
-{
-	GENERATED_BODY()
-
-	FVector2D Origin;
-	int32 UBounds;
-	int32 VBounds;
-
-	FHealthCheckInstructions() {}
-	FHealthCheckInstructions(
-		FVector2D InOrigin,
-		int32 InUBounds,
-		int32 InVBounds)
-		:Origin(InOrigin), UBounds(InUBounds), VBounds(InVBounds) {}
-};
-
 /**
  * 
  */
@@ -48,10 +31,8 @@ protected:
 
 private:
 	TArray<int> PaintCoverageArray;
-
-	TQueue<FHealthCheckInstructions> HealthCheckQueue;
-
-	bool bIsConsumingHealthCheck = false;
+	TArray<int> TestArray;
+	int32 NumPaintedTiles = 0;
 
 protected:
 	virtual void BeginPlay() override;
@@ -59,7 +40,6 @@ protected:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
-	void ConsumeHealthCheckQueue();
 
-	float CalculateHealth(FVector2D Origin, int32 U_Bounds, int32 V_Bounds);
+	int32 CalculateHealth(FVector2D Origin);
 };
