@@ -3,6 +3,7 @@
 #include "PlayerCharacter.h"
 #include "../Projectiles/InksplatProjectile.h"
 #include "../PaintableActorComponents/PaintableObjectComponent.h"
+#include "../PaintableActorComponents/PaintableSkeletalMeshComponent.h"
 #include "Materials/Material.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -10,6 +11,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -41,6 +43,12 @@ APlayerCharacter::APlayerCharacter()
 	Mesh1P->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
+	FullBodyMesh = CreateDefaultSubobject<UPaintableSkeletalMeshComponent>(TEXT("FullBodyMesh"));
+	FullBodyMesh->SetOwnerNoSee(true);
+	FullBodyMesh->SetupAttachment(RootComponent);
+	//TODO replace magic number with variable
+	FullBodyMesh->SetMaxPaintedTiles(500);
+
 	// Create a gun mesh component
 	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
 	FP_Gun->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
@@ -56,6 +64,9 @@ APlayerCharacter::APlayerCharacter()
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
 	
+	//Health Setup
+	CurrentHealth = MaxHealth;
+
 	//Painting setup
 	//PaintableObjectComponent = CreateDefaultSubobject<UPaintableObjectComponent>(TEXT("PaintableObjectComponent"));
 	//static ConstructorHelpers::FObjectFinder<UMaterial> PaintableMaterialObjectFinder(
@@ -104,14 +115,19 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
 }
 
+void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APlayerCharacter, CurrentHealth);
+}
+
 void APlayerCharacter::OnFire()
 {
-	FString DebugMessage = FString::Printf(TEXT("%s, is firing"), *this->GetName());
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, DebugMessage);
 	if (ProjectileClass != nullptr && bCanFire)
 	{
 		bCanFire = false;
-		HandleFire(true);
+		ServerHandleFire(true);
 	}
 	//// try and fire a projectile
 	//if (ProjectileClass != nullptr)
@@ -152,7 +168,7 @@ void APlayerCharacter::OnFire()
 
 void APlayerCharacter::OnFireStopped()
 {
-	HandleFire(false);
+	ServerHandleFire(false);
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle_FireCooldownPeriod,
 		this,
@@ -167,15 +183,13 @@ void APlayerCharacter::ResetAfterCooldown()
 	bCanFire = true;
 }
 
-void APlayerCharacter::HandleFire_Implementation(bool bShouldFire)
+void APlayerCharacter::ServerHandleFire_Implementation(bool bShouldFire)
 {
 	UWorld* World = GetWorld();
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		if (bShouldFire)
 		{
-			FString EngineMessage = FString("About to run timed method on server");
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, EngineMessage);
 			World->GetTimerManager().SetTimer(
 				TimerHandle_TimeBetweenProjectiles,
 				this,
@@ -240,4 +254,18 @@ void APlayerCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void APlayerCharacter::ServerSetCurrentHealth()
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		//CurrentHealth = FMath::Clamp(NewHealth, 0.0f, MaxHealth);
+	}
+	return;
+}
+
+void APlayerCharacter::OnRep_CurrentHealth()
+{
+	//UE_LOG(LogTemp, Warning, TEXT("Health was replicated"));
 }

@@ -31,8 +31,14 @@ protected:
 
 private:
 	TArray<int> PaintCoverageArray;
-	TArray<int> TestArray;
+
+	//UPROPERTY(ReplicatedUsing=OnRep_NumPaintedTiles)
 	int32 NumPaintedTiles = 0;
+
+	int32 MaxPaintedTiles = 100;
+
+protected:
+	
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,6 +46,8 @@ protected:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
+	float CalculatePaintCoverage(FVector2D Origin);
 
-	int32 CalculateHealth(FVector2D Origin);
+public:
+	void SetMaxPaintedTiles(int32 MaxTilesToSet) { MaxPaintedTiles = MaxTilesToSet; }
 };

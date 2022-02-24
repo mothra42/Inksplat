@@ -26,6 +26,9 @@ class APlayerCharacter : public ACharacter
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	USkeletalMeshComponent* Mesh1P;
 
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	class UPaintableSkeletalMeshComponent* FullBodyMesh;
+
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USkeletalMeshComponent* FP_Gun;
@@ -87,7 +90,7 @@ protected:
 
 	/** Server function for spawning projectiles.*/
 	UFUNCTION(Server, Reliable)
-	void HandleFire(bool bShouldFire);
+	void ServerHandleFire(bool bShouldFire);
 
 	void SpawnProjectile();
 
@@ -122,6 +125,22 @@ protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
+
+protected:
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Health")
+	float MaxHealth = 100.0f;
+
+	UPROPERTY(ReplicatedUsing=OnRep_CurrentHealth)
+	float CurrentHealth;
+
+	UFUNCTION()
+	void OnRep_CurrentHealth();
+
+public:	
+	void ServerSetCurrentHealth();
 
 public:
 	/** Returns Mesh1P subobject **/
