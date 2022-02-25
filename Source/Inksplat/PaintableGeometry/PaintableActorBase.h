@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "../Interfaces/PaintableObjectInterface.h"
 #include "PaintableActorBase.generated.h"
 
 UCLASS()
-class INKSPLAT_API APaintableActorBase : public AActor
+class INKSPLAT_API APaintableActorBase : public AActor, public IPaintableObjectInterface
 {
 	GENERATED_BODY()
 	
@@ -25,6 +26,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color);
+	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color) override;
 
 };

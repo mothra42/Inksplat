@@ -269,3 +269,19 @@ void APlayerCharacter::OnRep_CurrentHealth()
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Health was replicated"));
 }
+
+void APlayerCharacter::PaintActor(const FHitResult& Hit, const FLinearColor& Color)
+{
+	//UPaintableStaticMeshComponent* HitStaticMeshComp = Cast<UPaintableStaticMeshComponent>(Hit.Component);
+	//UPaintableSkeletalMeshComponent* HitSkeletalMeshComp = Cast<UPaintableSkeletalMeshComponent>(Hit.Component);
+	//if (HitStaticMeshComp)
+	//{
+	//	HitStaticMeshComp->PaintMesh(Hit, Color);
+	//}
+	//else if (HitSkeletalMeshComp)
+	//{
+	//	HitSkeletalMeshComp->PaintMesh(Hit, Color);
+	//}
+	UE_LOG(LogTemp, Warning, TEXT("Painting player"));
+	FullBodyMesh->PaintMesh(Hit, Color);
+}

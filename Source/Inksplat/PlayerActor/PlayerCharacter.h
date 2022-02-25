@@ -18,7 +18,7 @@ class UAnimMontage;
 class USoundBase;
 
 UCLASS(config=Game)
-class APlayerCharacter : public ACharacter
+class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 {
 	GENERATED_BODY()
 
@@ -141,6 +141,9 @@ protected:
 
 public:	
 	void ServerSetCurrentHealth();
+
+public:
+	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color) override;
 
 public:
 	/** Returns Mesh1P subobject **/

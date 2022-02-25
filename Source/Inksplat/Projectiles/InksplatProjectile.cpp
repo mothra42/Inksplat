@@ -3,7 +3,9 @@
 #include "InksplatProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "../PaintableActorComponents/PaintableObjectComponent.h"
+#include "../PlayerActor/PlayerCharacter.h"
 #include "../PaintableGeometry/PaintableActorBase.h"
+#include "../Interfaces/PaintableObjectInterface.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -81,9 +83,15 @@ void AInksplatProjectile::PaintActor(const FHitResult& Hit)
 		TraceParams
 	);
 
-	APaintableActorBase* PaintableActor = Cast<APaintableActorBase>(LineTraceHit.Actor);
-	if (PaintableActor)
+	IPaintableObjectInterface* PaintableObject = Cast<IPaintableObjectInterface>(LineTraceHit.Actor);
+	
+	if (PaintableObject)
 	{
-		PaintableActor->PaintActor(LineTraceHit, FLinearColor::Blue);
+		PaintableObject->PaintActor(LineTraceHit, FLinearColor::Blue);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Paintable Object is null"));
+	}
+	
 }

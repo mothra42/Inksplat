@@ -31,7 +31,6 @@ void APaintableActorBase::Tick(float DeltaTime)
 
 void APaintableActorBase::PaintActor(const FHitResult& Hit, const FLinearColor& Color)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Attempting to paint actor"));
 	UPaintableStaticMeshComponent* HitStaticMeshComp = Cast<UPaintableStaticMeshComponent>(Hit.Component);
 	UPaintableSkeletalMeshComponent* HitSkeletalMeshComp = Cast<UPaintableSkeletalMeshComponent>(Hit.Component);
 	if (HitStaticMeshComp)
