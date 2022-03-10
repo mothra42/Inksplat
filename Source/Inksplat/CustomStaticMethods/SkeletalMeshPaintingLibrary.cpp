@@ -7,6 +7,7 @@
 
 bool USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(const struct FHitResult& Hit, FVector2D& UV)
 {
+    FVector PointInReferencePose;
     if (UPrimitiveComponent* HitPrimComp = Hit.Component.Get())
     {
         TArray<FVertexUVPair> AllVertices;
@@ -26,6 +27,8 @@ bool USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(const struct FHitResul
                         AllVertices.Emplace(NewPair);
                     }
                 }
+
+                GetHitResultPointInRefPose(Hit, PointInReferencePose);
             }
         }
         else if (UBodySetup* BodySetup = HitPrimComp->GetBodySetup())
@@ -41,7 +44,7 @@ bool USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(const struct FHitResul
         }
 
         // Sort Shortest Vertex from LocalHitPos
-        AllVertices.Sort(FSortVertexByDistance(LocalHitPos));
+        AllVertices.Sort(FSortVertexByDistance(PointInReferencePose));
 
         if (AllVertices.Num() < 7)
         {
@@ -59,12 +62,45 @@ bool USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(const struct FHitResul
 
         // Transform hit location from world to local space.
         // Find barycentric coords
-        FVector BaryCoords = FMath::ComputeBaryCentric2D(LocalHitPos, Pos0, Pos1, Pos2);
+        FVector BaryCoords = FMath::ComputeBaryCentric2D(PointInReferencePose, Pos0, Pos1, Pos2);
         // Use to blend UVs
         UV = (BaryCoords.X * UV0) + (BaryCoords.Y * UV1) + (BaryCoords.Z * UV2);
 
         return true;
     }
 
+    return false;
+}
+
+FTransform USkeletalMeshPaintingLibrary::GetSkeletalMeshRefPose(USkeletalMesh* SkeletalMesh,int BoneIndex)
+{
+    FTransform MeshBonePoseTransform;
+    MeshBonePoseTransform.SetIdentity();
+    MeshBonePoseTransform = SkeletalMesh->RefSkeleton.GetRefBonePose()[BoneIndex];
+    int ParentBoneIndex = SkeletalMesh->RefSkeleton.GetParentIndex(BoneIndex);
+    if (ParentBoneIndex == INDEX_NONE)
+    {
+        return MeshBonePoseTransform;
+    }
+    else
+    {
+        return MeshBonePoseTransform * GetSkeletalMeshRefPose(SkeletalMesh, ParentBoneIndex);
+    }
+}
+
+bool USkeletalMeshPaintingLibrary::GetHitResultPointInRefPose(const struct FHitResult& HitResult, FVector& Point)
+{
+    if (UPrimitiveComponent* HitPrimComp = HitResult.Component.Get())
+    {
+        FVector HitPoint = HitResult.ImpactPoint;
+        if (USkeletalMeshComponent* SkelComp = Cast<USkeletalMeshComponent>(HitPrimComp))
+        {
+            int BoneIndex = SkelComp->SkeletalMesh->RefSkeleton.FindBoneIndex(HitResult.BoneName);
+            FTransform PoseTransform = SkelComp->SkeletalMesh->RefSkeleton.GetRefBonePose()[BoneIndex];
+            HitPoint = SkelComp->GetSocketTransform(HitResult.BoneName).InverseTransformPosition(HitPoint);
+            Point = GetSkeletalMeshRefPose(SkelComp->SkeletalMesh, BoneIndex).TransformPosition(HitPoint);
+            return true;
+        }
+    }
     return false;
 }

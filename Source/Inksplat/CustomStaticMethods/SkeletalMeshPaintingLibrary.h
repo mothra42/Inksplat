@@ -42,4 +42,8 @@ class INKSPLAT_API USkeletalMeshPaintingLibrary : public UObject
 	
 public:
     static bool FindCollisionUVFromHit(const struct FHitResult& Hit, FVector2D& UV);
+
+private:
+    static FTransform GetSkeletalMeshRefPose(USkeletalMesh* SkeletalMesh, int BoneIndex);
+    static bool GetHitResultPointInRefPose(const FHitResult& HitResult, FVector& Point);
 };
