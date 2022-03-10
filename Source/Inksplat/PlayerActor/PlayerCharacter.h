@@ -130,20 +130,15 @@ protected:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Health")
-	float MaxHealth = 100.0f;
-
-	UPROPERTY(ReplicatedUsing=OnRep_CurrentHealth)
-	float CurrentHealth;
-
-	UFUNCTION()
-	void OnRep_CurrentHealth();
-
-public:	
-	void ServerSetCurrentHealth();
+	//method used to end play for player
+	void EndPlay();
 
 public:
 	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color) override;
+
+
+	//Called from paintable mesh whenever it is painted. Paintable mesh class holds all info related to painting coverage
+	virtual void OnHealthUpdate(float PercentagePainted);
 
 public:
 	/** Returns Mesh1P subobject **/

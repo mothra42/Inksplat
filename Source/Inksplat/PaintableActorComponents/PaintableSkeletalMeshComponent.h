@@ -32,13 +32,15 @@ protected:
 private:
 	TArray<int> PaintCoverageArray;
 
-	//UPROPERTY(ReplicatedUsing=OnRep_NumPaintedTiles)
+	UPROPERTY(ReplicatedUsing=OnRep_NumPaintedTiles)
 	int32 NumPaintedTiles = 0;
 
 	int32 MaxPaintedTiles = 100;
-
 protected:
-	
+	UFUNCTION()
+	void OnRep_NumPaintedTiles();
+
+	void UpdateParentHealth();
 
 protected:
 	virtual void BeginPlay() override;

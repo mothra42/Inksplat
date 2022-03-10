@@ -33,7 +33,6 @@ APlayerCharacter::APlayerCharacter()
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh1P->SetOnlyOwnerSee(true);
@@ -47,7 +46,8 @@ APlayerCharacter::APlayerCharacter()
 	FullBodyMesh->SetOwnerNoSee(true);
 	FullBodyMesh->SetupAttachment(RootComponent);
 	//TODO replace magic number with variable
-	FullBodyMesh->SetMaxPaintedTiles(500);
+	FullBodyMesh->SetMaxPaintedTiles(300);
+	FullBodyMesh->SetIsReplicated(true);
 
 	// Create a gun mesh component
 	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
@@ -56,6 +56,7 @@ APlayerCharacter::APlayerCharacter()
 	FP_Gun->CastShadow = false;
 	// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
 	FP_Gun->SetupAttachment(RootComponent);
+	FP_Gun->bOnlyOwnerSee = true;
 
 	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
 	FP_MuzzleLocation->SetupAttachment(FP_Gun);
@@ -63,9 +64,6 @@ APlayerCharacter::APlayerCharacter()
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
-	
-	//Health Setup
-	CurrentHealth = MaxHealth;
 
 	//Painting setup
 	//PaintableObjectComponent = CreateDefaultSubobject<UPaintableObjectComponent>(TEXT("PaintableObjectComponent"));
@@ -79,8 +77,6 @@ void APlayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-
-	//SetupPaintableObjectComponent(Mesh1P);
 
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
 	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
@@ -118,8 +114,6 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(APlayerCharacter, CurrentHealth);
 }
 
 void APlayerCharacter::OnFire()
@@ -256,32 +250,30 @@ void APlayerCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void APlayerCharacter::ServerSetCurrentHealth()
-{
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		//CurrentHealth = FMath::Clamp(NewHealth, 0.0f, MaxHealth);
-	}
-	return;
-}
-
-void APlayerCharacter::OnRep_CurrentHealth()
-{
-	//UE_LOG(LogTemp, Warning, TEXT("Health was replicated"));
-}
 
 void APlayerCharacter::PaintActor(const FHitResult& Hit, const FLinearColor& Color)
 {
-	//UPaintableStaticMeshComponent* HitStaticMeshComp = Cast<UPaintableStaticMeshComponent>(Hit.Component);
-	//UPaintableSkeletalMeshComponent* HitSkeletalMeshComp = Cast<UPaintableSkeletalMeshComponent>(Hit.Component);
-	//if (HitStaticMeshComp)
-	//{
-	//	HitStaticMeshComp->PaintMesh(Hit, Color);
-	//}
-	//else if (HitSkeletalMeshComp)
-	//{
-	//	HitSkeletalMeshComp->PaintMesh(Hit, Color);
-	//}
-	UE_LOG(LogTemp, Warning, TEXT("Painting player"));
 	FullBodyMesh->PaintMesh(Hit, Color);
+}
+
+void APlayerCharacter::OnHealthUpdate(float PercentagePainted)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Player %s, has percentage painted %f"), *GetName(), PercentagePainted);
+	if (PercentagePainted >= 1.0)
+	{	
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s has been destroyed"), *GetName());
+			Destroy();
+		}
+	}
+}
+
+void APlayerCharacter::EndPlay()
+{
+	//TODO
+	//consider making a observation camera mode on death.
+	//add neat vfx maybe.
+	GetController()->Destroy();
+	Destroy();
 }

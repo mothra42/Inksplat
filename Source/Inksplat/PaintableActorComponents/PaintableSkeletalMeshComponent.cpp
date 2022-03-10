@@ -7,6 +7,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "../CustomStaticMethods/SkeletalMeshPaintingLibrary.h"
+#include "../PlayerActor/PlayerCharacter.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Canvas.h"
@@ -51,7 +52,7 @@ void UPaintableSkeletalMeshComponent::BeginPlay()
 void UPaintableSkeletalMeshComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	//DOREPLIFETIME(UPaintableSkeletalMeshComponent, MaxPaintedTiles);
+	DOREPLIFETIME(UPaintableSkeletalMeshComponent, NumPaintedTiles);
 
 }
 
@@ -106,6 +107,24 @@ float UPaintableSkeletalMeshComponent::CalculatePaintCoverage(FVector2D Origin)
 		PaintCoverageArray[PaintedTile] = 1;
 	}
 
+	UpdateParentHealth();
 	return NumPaintedTiles / MaxPaintedTiles;
 }
 
+void UPaintableSkeletalMeshComponent::UpdateParentHealth()
+{
+	APlayerCharacter* PlayerOwner = Cast<APlayerCharacter>(GetOwner());
+	if (PlayerOwner)
+	{
+		float test = float(NumPaintedTiles) / float(MaxPaintedTiles);
+		UE_LOG(LogTemp, Warning, TEXT("Percentage from mesh is %f"), test);
+		PlayerOwner->OnHealthUpdate(float(NumPaintedTiles) / MaxPaintedTiles);
+	}
+}
+
+void UPaintableSkeletalMeshComponent::OnRep_NumPaintedTiles()
+{
+	UE_LOG(LogTemp, Warning, TEXT("NumPaintedTiles is %i"), NumPaintedTiles);
+	UE_LOG(LogTemp, Warning, TEXT("MaxPaintedTiles is %i"), MaxPaintedTiles);
+	UpdateParentHealth();
+}
