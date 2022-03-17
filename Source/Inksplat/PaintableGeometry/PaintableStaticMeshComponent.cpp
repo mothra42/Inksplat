@@ -18,12 +18,13 @@ UPaintableStaticMeshComponent::UPaintableStaticMeshComponent()
 	{
 		ParentMaterial = PaintableMaterialFinder.Object;
 	}
+
+	SetIsReplicated(true);
 }
 
 void UPaintableStaticMeshComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 	FLinearColor ClearColor = FLinearColor(0.0, 0.0, 0.0, 0.0);
 	PaintTexture = UKismetRenderingLibrary::CreateRenderTarget2D(
 		GetWorld(),
@@ -42,8 +43,19 @@ void UPaintableStaticMeshComponent::BeginPlay()
 	SetMaterial(0, MeshMaterialInstance);
 }
 
+void UPaintableStaticMeshComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+}
+
 bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLinearColor& Color)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Paint Static Mesh Called"));
+	if (GetOwner()->GetLocalRole() != ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Painting on client"));
+	}
 	UCanvas* Canvas;
 	FVector2D CanvasSize;
 	FDrawToRenderTargetContext Context;
@@ -65,6 +77,5 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 
 	Canvas->DrawItem(RectItem);
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
-	//Canvas->DrawTexture
 	return true;
 }
