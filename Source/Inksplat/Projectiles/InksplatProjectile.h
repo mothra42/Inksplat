@@ -22,7 +22,14 @@ class AInksplatProjectile : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UProjectileMovementComponent* ProjectileMovement;
 
+
 protected:
+	UPROPERTY(ReplicatedUsing=OnRep_Test)
+	FVector HitLocation;
+
+protected:
+	virtual void BeginPlay() override;
+
 	//called when projectile impacts actor
 	UFUNCTION(Category = "Projectile")
 	void OnProjectileImpact(
@@ -33,10 +40,15 @@ protected:
 		const FHitResult& Hit
 	);
 
+	UFUNCTION()
+	void OnRep_Test();
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual void Destroyed() override;
 
 	//Paint the actor should only occur locally and not in server
-	void PaintActor(const FHitResult& Hit);
+	void PaintActor();
 public:
 	AInksplatProjectile();
 

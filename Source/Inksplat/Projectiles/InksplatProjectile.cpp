@@ -7,6 +7,7 @@
 #include "../PaintableGeometry/PaintableActorBase.h"
 #include "../Interfaces/PaintableObjectInterface.h"
 #include "Components/SphereComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"
@@ -20,12 +21,6 @@ AInksplatProjectile::AInksplatProjectile()
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
-
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		// set up a notification for when this component hits something blocking
-		CollisionComp->OnComponentHit.AddDynamic(this, &AInksplatProjectile::OnProjectileImpact);
-	}
 			
 	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
@@ -46,28 +41,50 @@ AInksplatProjectile::AInksplatProjectile()
 	InitialLifeSpan = 3.0f;
 }
 
+void AInksplatProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// set up a notification for when this component hits something blocking
+		CollisionComp->OnComponentHit.AddDynamic(this, &AInksplatProjectile::OnProjectileImpact);
+	}
+}
+
+void AInksplatProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AInksplatProjectile, HitLocation);
+}
+
 void AInksplatProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
-		PaintActor(Hit);
-		Destroy();
+		HitLocation = Hit.ImpactPoint;
+		SetActorHiddenInGame(true);
+		CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+}
+
+void AInksplatProjectile::OnRep_Test()
+{
+	PaintActor();
+	Destroy();
 }
 
 void AInksplatProjectile::Destroyed()
 {
-	
+	UE_LOG(LogTemp, Warning, TEXT("Calling Custom Destroyed"));
 	//need to think about where this function runs and its role
 	//PaintActor();
 	//TODO make paint particle effect spawn here.
 }
 
-void AInksplatProjectile::PaintActor(const FHitResult& Hit)
+void AInksplatProjectile::PaintActor()
 {
 	FVector TraceBeginLocation = GetActorLocation();
-	FVector TraceDirection = UKismetMathLibrary::GetDirectionUnitVector(TraceBeginLocation, Hit.Location);
+	FVector TraceDirection = UKismetMathLibrary::GetDirectionUnitVector(TraceBeginLocation, HitLocation);
 	FVector TraceEndLocation = TraceBeginLocation + 100 * TraceDirection;
 
 	FHitResult LineTraceHit;
@@ -84,7 +101,6 @@ void AInksplatProjectile::PaintActor(const FHitResult& Hit)
 	);
 
 	IPaintableObjectInterface* PaintableObject = Cast<IPaintableObjectInterface>(LineTraceHit.Actor);
-	
 	if (PaintableObject)
 	{
 		PaintableObject->PaintActor(LineTraceHit, FLinearColor::Blue);
@@ -93,5 +109,4 @@ void AInksplatProjectile::PaintActor(const FHitResult& Hit)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Paintable Object is null"));
 	}
-	
 }
