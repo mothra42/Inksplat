@@ -7,6 +7,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Canvas.h"
 #include "Containers/Queue.h"
@@ -72,7 +73,6 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 		CorrectedSplatSize, //size
 		Color
 	);
-
 	Canvas->DrawItem(RectItem);
 	if (!this)
 	{
@@ -81,6 +81,36 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
 	
 	return true;
+}
+
+void UPaintableStaticMeshComponent::CalculateUVStretchAndScale(const FHitResult& Hit, const FVector2D& UVPosition, float& OutScale, FVector& OutStretch)
+{
+	//TODO give variables better names and refactor method into more methods.
+	FVector RandomVector = UKismetMathLibrary::RandomUnitVectorFromStream(FRandomStream(0));
+	FVector OrthogonalVectorOne = FVector::CrossProduct(RandomVector, Hit.ImpactNormal).GetSafeNormal();
+	FVector OrthogonalVectorTwo = FVector::CrossProduct(OrthogonalVectorOne, Hit.ImpactNormal).GetSafeNormal();
+
+	FVector2D UVOffsetOne;
+	FVector2D UVOffsetTwo;
+	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(OrthogonalVectorOne * 25.f, Hit.FaceIndex), 0, UVOffsetOne);
+	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(OrthogonalVectorTwo * 25.f, Hit.FaceIndex), 0, UVOffsetTwo);
+
+	float UOffset = FVector2D::DotProduct(UVOffsetOne - UVPosition, FVector2D(1, 0));
+	float VOffset = FVector2D::DotProduct(UVOffsetTwo - UVPosition, FVector2D(0, 1));
+	OutStretch.X = UOffset;
+	OutStretch.Y = VOffset;
+
+	OutScale = (UVOffsetOne + UVOffsetOne).SizeSquared();
+}
+
+FHitResult UPaintableStaticMeshComponent::ConstructOffsetHitResult(FVector Location, int32 FaceIndex)
+{
+	FHitResult HitResult;
+	HitResult.Component = this;
+	HitResult.Location = Location;
+	HitResult.FaceIndex = FaceIndex;
+
+	return HitResult;
 }
 
 FVector2D UPaintableStaticMeshComponent::CalculatePaintScale(FVector Normal)
