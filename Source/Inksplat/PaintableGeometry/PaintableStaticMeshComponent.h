@@ -22,6 +22,7 @@ public:
 	bool PaintMesh(const FHitResult& Hit, const FLinearColor& Color);
 
 protected:
+	
 	class UTextureRenderTarget2D* PaintTexture;
 
 	class UMaterial* ParentMaterial;
@@ -31,5 +32,9 @@ protected:
 protected:
 	virtual void BeginPlay() override;
 
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Shot Size")
+	FVector2D BaseSplatSize = FVector2D(100.f, 100.f);
+
+	FVector2D CalculatePaintScale(FVector Normal);
 };
