@@ -23,11 +23,17 @@ public:
 
 protected:
 	
+	UPROPERTY(VisibleAnywhere)
 	class UTextureRenderTarget2D* PaintTexture;
 
 	class UMaterial* ParentMaterial;
 
+	UMaterial* BrushMaterial;
+
 	class UMaterialInstanceDynamic* MeshMaterialInstance;
+
+	UPROPERTY(Category = "Materials", VisibleAnywhere)
+	UMaterialInstanceDynamic* BrushMaterialInstance;
 
 protected:
 	virtual void BeginPlay() override;
