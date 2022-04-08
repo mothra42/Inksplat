@@ -42,7 +42,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Shot Size")
 	FVector2D BaseSplatSize = FVector2D(100.f, 100.f);
 
-	FVector2D CalculatePaintScale(FVector Normal);
+	FVector CalculatePaintScale(FVector Normal);
 
 private:
 	void CalculateUVStretchAndScale(const FHitResult& Hit, const FVector2D& UVPosition, float& OutScale, FVector& OutStretch);
