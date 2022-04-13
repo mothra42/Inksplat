@@ -2,8 +2,8 @@
 
 
 #include "PaintableActorBase.h"
-#include "PaintableStaticMeshComponent.h"
-#include "../PaintableActorComponents/PaintableSkeletalMeshComponent.h"
+#include "PaintableComponents/PaintableStaticMeshComponent.h"
+#include "PaintableComponents/PaintableSkeletalMeshComponent.h"
 
 // Sets default values
 APaintableActorBase::APaintableActorBase()
@@ -12,6 +12,7 @@ APaintableActorBase::APaintableActorBase()
 	PrimaryActorTick.bCanEverTick = false;
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	bReplicates = true;
 	RootComponent = Root;
 }
 

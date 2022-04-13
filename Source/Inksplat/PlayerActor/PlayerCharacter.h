@@ -9,7 +9,6 @@
 
 class UInputComponent;
 class USkeletalMeshComponent;
-class UPaintableObjectComponent;
 class USceneComponent;
 class UCameraComponent;
 class UMotionControllerComponent;
@@ -40,9 +39,6 @@ class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
-
-	UPROPERTY(VisibleDefaultsOnly, Category = PaintableObject)
-	UPaintableObjectComponent* PaintableObjectComponent;
 
 	UMaterial* PaintableMaterialParent;
 

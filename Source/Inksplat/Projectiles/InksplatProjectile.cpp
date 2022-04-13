@@ -2,7 +2,6 @@
 
 #include "InksplatProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "../PaintableActorComponents/PaintableObjectComponent.h"
 #include "../PlayerActor/PlayerCharacter.h"
 #include "../PaintableGeometry/PaintableActorBase.h"
 #include "../Interfaces/PaintableObjectInterface.h"
@@ -75,7 +74,6 @@ void AInksplatProjectile::OnRep_Test()
 
 void AInksplatProjectile::Destroyed()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Calling Custom Destroyed"));
 	//need to think about where this function runs and its role
 	//PaintActor();
 	//TODO make paint particle effect spawn here.

@@ -2,8 +2,7 @@
 
 #include "PlayerCharacter.h"
 #include "../Projectiles/InksplatProjectile.h"
-#include "../PaintableActorComponents/PaintableObjectComponent.h"
-#include "../PaintableActorComponents/PaintableSkeletalMeshComponent.h"
+#include "../PaintableGeometry/PaintableComponents/PaintableSkeletalMeshComponent.h"
 #include "Materials/Material.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
