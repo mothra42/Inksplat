@@ -29,8 +29,8 @@ class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 	class UPaintableSkeletalMeshComponent* FullBodyMesh;
 
 	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	USkeletalMeshComponent* FP_Gun;
+	//UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	//USkeletalMeshComponent* FP_Gun;
 
 	/** Location on gun mesh where projectiles should spawn. */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -39,6 +39,12 @@ class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
+
+	/** Gun class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = Weapon)
+	TSubclassOf<class APaintGun> PaintGunClass;
+
+	APaintGun* PlayerPaintGun;
 
 	UMaterial* PaintableMaterialParent;
 
@@ -60,10 +66,6 @@ public:
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
 	FVector GunOffset;
-
-	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category=Projectile)
-	TSubclassOf<class AInksplatProjectile> ProjectileClass;
 
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
@@ -88,7 +90,7 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerHandleFire(bool bShouldFire);
 
-	void SpawnProjectile();
+	void FireGun();
 
 	bool bCanFire = true;
 

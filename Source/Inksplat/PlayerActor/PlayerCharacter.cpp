@@ -1,8 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PlayerCharacter.h"
-#include "../Projectiles/InksplatProjectile.h"
 #include "../PaintableGeometry/PaintableComponents/PaintableSkeletalMeshComponent.h"
+#include "../Weapons/PaintGun.h"
 #include "Materials/Material.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -49,17 +49,17 @@ APlayerCharacter::APlayerCharacter()
 	FullBodyMesh->SetIsReplicated(true);
 
 	// Create a gun mesh component
-	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
-	FP_Gun->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
-	FP_Gun->bCastDynamicShadow = false;
-	FP_Gun->CastShadow = false;
-	// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
-	FP_Gun->SetupAttachment(RootComponent);
-	FP_Gun->bOnlyOwnerSee = true;
+	//FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
+	//FP_Gun->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
+	//FP_Gun->bCastDynamicShadow = false;
+	//FP_Gun->CastShadow = false;
+	//// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
+	//FP_Gun->SetupAttachment(RootComponent);
+	//FP_Gun->bOnlyOwnerSee = true;
 
-	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
-	FP_MuzzleLocation->SetupAttachment(FP_Gun);
-	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
+	//FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
+	//FP_MuzzleLocation->SetupAttachment(FP_Gun);
+	//FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
@@ -78,7 +78,12 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	if (PaintGunClass != nullptr)
+	{
+		PlayerPaintGun = GetWorld()->SpawnActor<APaintGun>(PaintGunClass);
+		PlayerPaintGun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+		PlayerPaintGun->SetOwningPlayer(this);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -117,7 +122,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void APlayerCharacter::OnFire()
 {
-	if (ProjectileClass != nullptr && bCanFire)
+	if (PlayerPaintGun != nullptr && bCanFire)
 	{
 		bCanFire = false;
 		ServerHandleFire(true);
@@ -186,7 +191,7 @@ void APlayerCharacter::ServerHandleFire_Implementation(bool bShouldFire)
 			World->GetTimerManager().SetTimer(
 				TimerHandle_TimeBetweenProjectiles,
 				this,
-				&APlayerCharacter::SpawnProjectile,
+				&APlayerCharacter::FireGun,
 				TimeBetweenProjectiles,
 				true
 			);
@@ -198,24 +203,11 @@ void APlayerCharacter::ServerHandleFire_Implementation(bool bShouldFire)
 	}
 }
 
-void APlayerCharacter::SpawnProjectile()
+void APlayerCharacter::FireGun()
 {
 	if (HasAuthority())
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)// && GetLocalRole() == ROLE_Authority)
-		{
-			const FRotator SpawnRotation = GetControlRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
-			FActorSpawnParameters SpawnParameters;
-			SpawnParameters.Instigator = GetInstigator();
-			SpawnParameters.Owner = this;
-
-			// spawn the projectile at the muzzle
-			World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
-		}
+		PlayerPaintGun->Server_FireProjectile();
 	}
 }
 

@@ -28,14 +28,27 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USceneComponent* MuzzleLocation;
 
+	//OwningPawn
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_PlayerOwner)
+	class APlayerCharacter* PlayerOwner;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	void Server_SpawnProjectile();
+
+	UFUNCTION()
+	void OnRep_PlayerOwner();
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	void Server_FireProjectile();
+
+	void SetOwningPlayer(APlayerCharacter* NewPlayerOwner);
 
 };
