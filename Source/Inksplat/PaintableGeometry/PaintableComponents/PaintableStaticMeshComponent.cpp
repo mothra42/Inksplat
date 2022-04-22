@@ -95,6 +95,7 @@ void UPaintableStaticMeshComponent::CalculateUVStretchAndScale(const FHitResult&
 	float VOffset = FVector2D::DotProduct(UVOffsetTwo - UVPosition, FVector2D(0, 1));
 	OutStretch.X = UOffset;
 	OutStretch.Y = VOffset;
+	OutStretch.Z = 0;
 }
 
 FHitResult UPaintableStaticMeshComponent::ConstructOffsetHitResult(FVector Location, int32 FaceIndex)

@@ -1,8 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PlayerCharacter.h"
-#include "../Projectiles/InksplatProjectile.h"
 #include "../PaintableGeometry/PaintableComponents/PaintableSkeletalMeshComponent.h"
+#include "../Weapons/PaintGun.h"
 #include "Materials/Material.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -49,17 +49,17 @@ APlayerCharacter::APlayerCharacter()
 	FullBodyMesh->SetIsReplicated(true);
 
 	// Create a gun mesh component
-	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
-	FP_Gun->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
-	FP_Gun->bCastDynamicShadow = false;
-	FP_Gun->CastShadow = false;
-	// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
-	FP_Gun->SetupAttachment(RootComponent);
-	FP_Gun->bOnlyOwnerSee = true;
+	//FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
+	//FP_Gun->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
+	//FP_Gun->bCastDynamicShadow = false;
+	//FP_Gun->CastShadow = false;
+	//// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
+	//FP_Gun->SetupAttachment(RootComponent);
+	//FP_Gun->bOnlyOwnerSee = true;
 
-	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
-	FP_MuzzleLocation->SetupAttachment(FP_Gun);
-	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
+	//FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
+	//FP_MuzzleLocation->SetupAttachment(FP_Gun);
+	//FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
@@ -78,7 +78,13 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	if (PaintGunClass != nullptr && GetLocalRole() == ROLE_Authority)
+	{
+		PlayerPaintGun = GetWorld()->SpawnActor<APaintGun>(PaintGunClass);
+		PlayerPaintGun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+		PlayerPaintGun->SetOwningPlayer(this);
+		PlayerPaintGun->SetPaintColor(FColor::MakeRandomColor());
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -113,109 +119,22 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(APlayerCharacter, PlayerPaintGun);
 }
 
 void APlayerCharacter::OnFire()
 {
-	if (ProjectileClass != nullptr && bCanFire)
+	if (PlayerPaintGun != nullptr)
 	{
-		bCanFire = false;
-		ServerHandleFire(true);
+		PlayerPaintGun->FireWeapon();
 	}
-	//// try and fire a projectile
-	//if (ProjectileClass != nullptr)
-	//{
-	//	UWorld* const World = GetWorld();
-	//	if (World != nullptr)
-	//	{
-	//		const FRotator SpawnRotation = GetControlRotation();
-	//		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-	//		const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-	//
-	//		//Set Spawn Collision Handling Override
-	//		FActorSpawnParameters ActorSpawnParams;
-	//		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-	//
-	//		// spawn the projectile at the muzzle
-	//		World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-	//	}
-	//}
-	//
-	//// try and play the sound if specified
-	//if (FireSound != nullptr)
-	//{
-	//	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	//}
-	//
-	//// try and play a firing animation if specified
-	//if (FireAnimation != nullptr)
-	//{
-	//	// Get the animation object for the arms mesh
-	//	UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-	//	if (AnimInstance != nullptr)
-	//	{
-	//		AnimInstance->Montage_Play(FireAnimation, 1.f);
-	//	}
-	//}
 }
 
 void APlayerCharacter::OnFireStopped()
 {
-	ServerHandleFire(false);
-	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle_FireCooldownPeriod,
-		this,
-		&APlayerCharacter::ResetAfterCooldown,
-		FireCooldownPeriod,
-		false
-	);
-}
-
-void APlayerCharacter::ResetAfterCooldown()
-{
-	bCanFire = true;
-}
-
-void APlayerCharacter::ServerHandleFire_Implementation(bool bShouldFire)
-{
-	UWorld* World = GetWorld();
-	if (GetLocalRole() == ROLE_Authority)
+	if (PlayerPaintGun != nullptr)
 	{
-		if (bShouldFire)
-		{
-			World->GetTimerManager().SetTimer(
-				TimerHandle_TimeBetweenProjectiles,
-				this,
-				&APlayerCharacter::SpawnProjectile,
-				TimeBetweenProjectiles,
-				true
-			);
-		}
-		else
-		{
-			World->GetTimerManager().ClearTimer(TimerHandle_TimeBetweenProjectiles);
-		}
-	}
-}
-
-void APlayerCharacter::SpawnProjectile()
-{
-	if (HasAuthority())
-	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)// && GetLocalRole() == ROLE_Authority)
-		{
-			const FRotator SpawnRotation = GetControlRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
-			FActorSpawnParameters SpawnParameters;
-			SpawnParameters.Instigator = GetInstigator();
-			SpawnParameters.Owner = this;
-
-			// spawn the projectile at the muzzle
-			World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
-		}
+		PlayerPaintGun->StopFiringWeapon();
 	}
 }
 
@@ -266,6 +185,11 @@ void APlayerCharacter::OnHealthUpdate(float PercentagePainted)
 			Destroy();
 		}
 	}
+}
+
+void APlayerCharacter::OnRep_PlayerPaintGun()
+{
+	PlayerPaintGun->SetOwningPlayer(this);
 }
 
 void APlayerCharacter::EndPlay()
