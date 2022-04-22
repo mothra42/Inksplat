@@ -40,6 +40,7 @@ void APaintGun::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(APaintGun, PlayerOwner);
+	DOREPLIFETIME(APaintGun, PaintColor);
 }
 
 // Called every frame
@@ -71,6 +72,14 @@ void APaintGun::SetPaintColor(FColor ColorToSet)
 	if (PlayerOwner->GetLocalRole() == ROLE_Authority)
 	{
 		PaintColor = ColorToSet;
+	}
+}
+
+void APaintGun::OnRep_PaintColor()
+{
+	if (PlayerOwner->GetLocalRole() < ROLE_Authority)
+	{
+		SetPaintColor(PaintColor);
 	}
 }
 

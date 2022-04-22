@@ -83,6 +83,7 @@ void APlayerCharacter::BeginPlay()
 		PlayerPaintGun = GetWorld()->SpawnActor<APaintGun>(PaintGunClass);
 		PlayerPaintGun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 		PlayerPaintGun->SetOwningPlayer(this);
+		PlayerPaintGun->SetPaintColor(FColor::MakeRandomColor());
 	}
 }
 

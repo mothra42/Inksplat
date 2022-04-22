@@ -24,8 +24,11 @@ class AInksplatProjectile : public AActor
 
 
 protected:
-	UPROPERTY(ReplicatedUsing=OnRep_Test)
+	UPROPERTY(ReplicatedUsing=OnRep_MeshHit)
 	FVector HitLocation;
+
+	UPROPERTY(ReplicatedUsing = OnRep_PaintColor)
+	FColor PaintColor;
 
 protected:
 	virtual void BeginPlay() override;
@@ -41,7 +44,10 @@ protected:
 	);
 
 	UFUNCTION()
-	void OnRep_Test();
+	void OnRep_MeshHit();
+
+	UFUNCTION()
+	void OnRep_PaintColor();
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -56,5 +62,7 @@ public:
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+	void SetProjectilePaintColor(FColor ColorToSet) { PaintColor = ColorToSet; }
 };
 

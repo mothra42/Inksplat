@@ -37,7 +37,7 @@ public:
 //Equiping/Setting up owner methods and variables
 protected:
 	//OwningPawn
-	UPROPERTY(Transient, ReplicatedUsing = OnRep_PlayerOwner)
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerOwner)
 	class APlayerCharacter* PlayerOwner;
 
 public:
@@ -48,7 +48,12 @@ public:
 
 //Weapon Paint Properties and Methods
 private:
+	UPROPERTY(ReplicatedUsing = OnRep_PaintColor)
 	FColor PaintColor;
+
+protected:
+	UFUNCTION()
+	void OnRep_PaintColor();
 
 public:
 	void SetPaintColor(FColor ColorToSet);
