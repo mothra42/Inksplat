@@ -54,6 +54,7 @@ void AInksplatProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AInksplatProjectile, HitLocation);
+	DOREPLIFETIME(AInksplatProjectile, PaintColor);
 }
 
 void AInksplatProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -66,10 +67,15 @@ void AInksplatProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, 
 	}
 }
 
-void AInksplatProjectile::OnRep_Test()
+void AInksplatProjectile::OnRep_MeshHit()
 {
 	PaintActor();
 	Destroy();
+}
+
+void AInksplatProjectile::OnRep_PaintColor()
+{
+	SetProjectilePaintColor(PaintColor);
 }
 
 void AInksplatProjectile::Destroyed()
@@ -101,7 +107,7 @@ void AInksplatProjectile::PaintActor()
 	IPaintableObjectInterface* PaintableObject = Cast<IPaintableObjectInterface>(LineTraceHit.Actor);
 	if (PaintableObject)
 	{
-		PaintableObject->PaintActor(LineTraceHit, FLinearColor::Blue);
+		PaintableObject->PaintActor(LineTraceHit, PaintColor);
 	}
 	else
 	{

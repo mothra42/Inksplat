@@ -29,8 +29,8 @@ class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 	class UPaintableSkeletalMeshComponent* FullBodyMesh;
 
 	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	USkeletalMeshComponent* FP_Gun;
+	//UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	//USkeletalMeshComponent* FP_Gun;
 
 	/** Location on gun mesh where projectiles should spawn. */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -39,6 +39,13 @@ class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
+
+	/** Gun class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = Weapon)
+	TSubclassOf<class APaintGun> PaintGunClass;
+
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerPaintGun)
+	APaintGun* PlayerPaintGun;
 
 	UMaterial* PaintableMaterialParent;
 
@@ -61,10 +68,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
 	FVector GunOffset;
 
-	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category=Projectile)
-	TSubclassOf<class AInksplatProjectile> ProjectileClass;
-
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
 	USoundBase* FireSound;
@@ -73,31 +76,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* FireAnimation;
 
+//Methods related to equipping weapons
+protected:
+	UFUNCTION()
+	void OnRep_PlayerPaintGun();
+
 //Methods related to firing
 protected:
-
-	//TODO ideally these methods are tied to specific weapon classes that determine fire properties
 	/** Fires a projectile. */
 	void OnFire();
 
 	void OnFireStopped();
 
-	void ResetAfterCooldown();
-
-	/** Server function for spawning projectiles.*/
-	UFUNCTION(Server, Reliable)
-	void ServerHandleFire(bool bShouldFire);
-
-	void SpawnProjectile();
-
-	bool bCanFire = true;
-
-	float TimeBetweenProjectiles = 0.1f;
-	FTimerHandle TimerHandle_TimeBetweenProjectiles;
-
-	float FireCooldownPeriod = 0.25f;
-	FTimerHandle TimerHandle_FireCooldownPeriod;
-
+//Movement Methods
 protected:
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);
