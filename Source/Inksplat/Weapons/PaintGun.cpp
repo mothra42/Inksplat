@@ -48,12 +48,97 @@ void APaintGun::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void APaintGun::Server_FireProjectile()
+//Methods related to equipping weapon
+void APaintGun::SetOwningPlayer(APlayerCharacter* NewPlayerOwner)
 {
-	//spawn projectile on server
-	Server_SpawnProjectile();
+	if (PlayerOwner != NewPlayerOwner)
+	{
+		SetInstigator(NewPlayerOwner);
+		PlayerOwner = NewPlayerOwner;
+		// net owner for RPC calls
+		SetOwner(NewPlayerOwner);
+	}
+}
 
-	//TODO spawn particle fx
+void APaintGun::OnRep_PlayerOwner()
+{
+	SetOwningPlayer(PlayerOwner);
+}
+
+//Methods related to painting properties
+void APaintGun::SetPaintColor(FColor ColorToSet)
+{
+	if (PlayerOwner->GetLocalRole() == ROLE_Authority)
+	{
+		PaintColor = ColorToSet;
+	}
+}
+
+//Methods related to firing weapon
+void APaintGun::FireWeapon()
+{
+	if (bCanFire)
+	{
+		//UE_LOG
+		bCanFire = false;
+		ServerHandleFire(true);
+	}
+
+	//// try and play the sound if specified
+	//if (FireSound != nullptr)
+	//{
+	//	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+	//}
+	//
+	//// try and play a firing animation if specified
+	//if (FireAnimation != nullptr)
+	//{
+	//	// Get the animation object for the arms mesh
+	//	UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
+	//	if (AnimInstance != nullptr)
+	//	{
+	//		AnimInstance->Montage_Play(FireAnimation, 1.f);
+	//	}
+	//}
+}
+
+void APaintGun::StopFiringWeapon()
+{
+	ServerHandleFire(false);
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle_FireCooldownPeriod,
+		this,
+		&APaintGun::ResetAfterCooldown,
+		FireCooldownPeriod,
+		false
+	);
+}
+
+void APaintGun::ResetAfterCooldown()
+{
+	bCanFire = true;
+}
+
+void APaintGun::ServerHandleFire_Implementation(bool bShouldFire)
+{
+	UWorld* World = GetWorld();
+	if (PlayerOwner->GetLocalRole() == ROLE_Authority)
+	{
+		if (bShouldFire)
+		{
+			World->GetTimerManager().SetTimer(
+				TimerHandle_TimeBetweenProjectiles,
+				this,
+				&APaintGun::Server_SpawnProjectile,
+				FireRate,
+				true
+			);
+		}
+		else
+		{
+			World->GetTimerManager().ClearTimer(TimerHandle_TimeBetweenProjectiles);
+		}
+	}
 }
 
 void APaintGun::Server_SpawnProjectile()
@@ -75,100 +160,5 @@ void APaintGun::Server_SpawnProjectile()
 			// spawn the projectile at the muzzle
 			World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
 		}
-	}
-}
-
-void APaintGun::SetOwningPlayer(APlayerCharacter* NewPlayerOwner)
-{
-	if (PlayerOwner != NewPlayerOwner)
-	{
-		SetInstigator(NewPlayerOwner);
-		PlayerOwner = NewPlayerOwner;
-		// net owner for RPC calls
-		SetOwner(NewPlayerOwner);
-	}
-}
-
-void APaintGun::OnRep_PlayerOwner()
-{
-	SetOwningPlayer(PlayerOwner);
-}
-
-void APaintGun::TriggerRPCTest()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Trying to trigger rpc"));
-	RPC_Test();
-}
-
-void APaintGun::RPC_Test_Implementation()
-{
-	if (PlayerOwner->GetLocalRole() == ROLE_Authority)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("RPC IS WORKING"))
-	}
-}
-
-//----TODO clean up code order into sections----
-void APaintGun::FireWeapon()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Trying to fire weapon"));
-	if (bCanFire)
-	{
-		bCanFire = false;
-		UE_LOG(LogTemp, Warning, TEXT("Calling Server handle fire"));
-		ServerHandleFire(true);
-	}
-}
-
-void APaintGun::StopFiringWeapon()
-{
-		OnFireStopped();
-}
-
-void APaintGun::OnFireStopped()
-{
-	ServerHandleFire(false);
-	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle_FireCooldownPeriod,
-		this,
-		&APaintGun::ResetAfterCooldown,
-		FireCooldownPeriod,
-		false
-	);
-}
-
-void APaintGun::ResetAfterCooldown()
-{
-	bCanFire = true;
-}
-
-void APaintGun::ServerHandleFire_Implementation(bool bShouldFire)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Calling RPC"));
-	UWorld* World = GetWorld();
-	if (PlayerOwner->GetLocalRole() == ROLE_Authority)
-	{
-		if (bShouldFire)
-		{
-			World->GetTimerManager().SetTimer(
-				TimerHandle_TimeBetweenProjectiles,
-				this,
-				&APaintGun::FireGun,
-				TimeBetweenProjectiles,
-				true
-			);
-		}
-		else
-		{
-			World->GetTimerManager().ClearTimer(TimerHandle_TimeBetweenProjectiles);
-		}
-	}
-}
-
-void APaintGun::FireGun()
-{
-	if (HasAuthority())
-	{
-		Server_FireProjectile();
 	}
 }

@@ -123,101 +123,17 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void APlayerCharacter::OnFire()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnFire in player called"));
 	if (PlayerPaintGun != nullptr)
 	{
-		//bCanFire = false;
-		//ServerHandleFire(true);
-		//PlayerPaintGun->TriggerRPCTest();
-		UE_LOG(LogTemp, Warning, TEXT("Firing Weapon from player"));
 		PlayerPaintGun->FireWeapon();
-		PlayerPaintGun->TriggerRPCTest();
 	}
-	//// try and fire a projectile
-	//if (ProjectileClass != nullptr)
-	//{
-	//	UWorld* const World = GetWorld();
-	//	if (World != nullptr)
-	//	{
-	//		const FRotator SpawnRotation = GetControlRotation();
-	//		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-	//		const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-	//
-	//		//Set Spawn Collision Handling Override
-	//		FActorSpawnParameters ActorSpawnParams;
-	//		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-	//
-	//		// spawn the projectile at the muzzle
-	//		World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-	//	}
-	//}
-	//
-	//// try and play the sound if specified
-	//if (FireSound != nullptr)
-	//{
-	//	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	//}
-	//
-	//// try and play a firing animation if specified
-	//if (FireAnimation != nullptr)
-	//{
-	//	// Get the animation object for the arms mesh
-	//	UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-	//	if (AnimInstance != nullptr)
-	//	{
-	//		AnimInstance->Montage_Play(FireAnimation, 1.f);
-	//	}
-	//}
 }
 
 void APlayerCharacter::OnFireStopped()
 {
-	//ServerHandleFire(false);
-	//GetWorld()->GetTimerManager().SetTimer(
-	//	TimerHandle_FireCooldownPeriod,
-	//	this,
-	//	&APlayerCharacter::ResetAfterCooldown,
-	//	FireCooldownPeriod,
-	//	false
-	//);
 	if (PlayerPaintGun != nullptr)
 	{
 		PlayerPaintGun->StopFiringWeapon();
-	}
-}
-
-void APlayerCharacter::ResetAfterCooldown()
-{
-	bCanFire = true;
-}
-
-void APlayerCharacter::ServerHandleFire_Implementation(bool bShouldFire)
-{
-	UWorld* World = GetWorld();
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		if (bShouldFire)
-		{
-			World->GetTimerManager().SetTimer(
-				TimerHandle_TimeBetweenProjectiles,
-				this,
-				&APlayerCharacter::FireGun,
-				TimeBetweenProjectiles,
-				true
-			);
-		}
-		else
-		{
-			World->GetTimerManager().ClearTimer(TimerHandle_TimeBetweenProjectiles);
-		}
-	}
-}
-
-void APlayerCharacter::FireGun()
-{
-	if (HasAuthority())
-	{
-		PlayerPaintGun->Server_FireProjectile();
 	}
 }
 

@@ -83,29 +83,12 @@ protected:
 
 //Methods related to firing
 protected:
-
-	//TODO ideally these methods are tied to specific weapon classes that determine fire properties
 	/** Fires a projectile. */
 	void OnFire();
 
 	void OnFireStopped();
 
-	void ResetAfterCooldown();
-
-	/** Server function for spawning projectiles.*/
-	UFUNCTION(Server, Reliable)
-	void ServerHandleFire(bool bShouldFire);
-
-	void FireGun();
-
-	bool bCanFire = true;
-
-	float TimeBetweenProjectiles = 0.1f;
-	FTimerHandle TimerHandle_TimeBetweenProjectiles;
-
-	float FireCooldownPeriod = 0.25f;
-	FTimerHandle TimerHandle_FireCooldownPeriod;
-
+//Movement Methods
 protected:
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);

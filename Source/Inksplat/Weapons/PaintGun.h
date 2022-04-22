@@ -15,10 +15,6 @@ public:
 	// Sets default values for this actor's properties
 	APaintGun();
 
-	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category = Projectile)
-	TSubclassOf<class AInksplatProjectile> ProjectileClass;
-
 protected:
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -28,60 +24,63 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USceneComponent* MuzzleLocation;
 
-	//OwningPawn
-	UPROPERTY(Transient, ReplicatedUsing = OnRep_PlayerOwner)
-	class APlayerCharacter* PlayerOwner;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	void Server_SpawnProjectile();
-
-	UFUNCTION()
-	void OnRep_PlayerOwner();
-
-	UFUNCTION(Server, Reliable)
-	void RPC_Test();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;	
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Server_FireProjectile();
+//Equiping/Setting up owner methods and variables
+protected:
+	//OwningPawn
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_PlayerOwner)
+	class APlayerCharacter* PlayerOwner;
 
-	void TriggerRPCTest();
-
+public:
 	void SetOwningPlayer(APlayerCharacter* NewPlayerOwner);
 
-//moved over logic TODO clean up into sections
+	UFUNCTION()
+	void OnRep_PlayerOwner();
+
+//Weapon Paint Properties and Methods
+private:
+	FColor PaintColor;
+
+public:
+	void SetPaintColor(FColor ColorToSet);
+
+//Weapon Firing methods and timer handles
+protected:
+	/** Projectile class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = Projectile)
+	TSubclassOf<class AInksplatProjectile> ProjectileClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Gun Properties")
+	float FireRate = 0.1f;
+	FTimerHandle TimerHandle_TimeBetweenProjectiles;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Gun Properties")
+	float FireCooldownPeriod = 0.25f;
+	FTimerHandle TimerHandle_FireCooldownPeriod;
+
 public:
 	void FireWeapon();
 
 	void StopFiringWeapon();
 
 protected:
-	
-	void OnFire();
-
-	void OnFireStopped();
-
 	void ResetAfterCooldown();
 
 	/** Server function for spawning projectiles.*/
 	UFUNCTION(Server, Reliable)
 	void ServerHandleFire(bool bShouldFire);
 
-	void FireGun();
+	void Server_SpawnProjectile();
 
 	bool bCanFire = true;
-
-	float TimeBetweenProjectiles = 0.1f;
-	FTimerHandle TimerHandle_TimeBetweenProjectiles;
-
-	float FireCooldownPeriod = 0.25f;
-	FTimerHandle TimerHandle_FireCooldownPeriod;
 
 };
