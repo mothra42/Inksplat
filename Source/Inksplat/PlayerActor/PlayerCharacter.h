@@ -44,6 +44,7 @@ class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
 	TSubclassOf<class APaintGun> PaintGunClass;
 
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerPaintGun)
 	APaintGun* PlayerPaintGun;
 
 	UMaterial* PaintableMaterialParent;
@@ -74,6 +75,11 @@ public:
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* FireAnimation;
+
+//Methods related to equipping weapons
+protected:
+	UFUNCTION()
+	void OnRep_PlayerPaintGun();
 
 //Methods related to firing
 protected:

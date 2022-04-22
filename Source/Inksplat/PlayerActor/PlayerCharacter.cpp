@@ -78,7 +78,7 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	if (PaintGunClass != nullptr)
+	if (PaintGunClass != nullptr && GetLocalRole() == ROLE_Authority)
 	{
 		PlayerPaintGun = GetWorld()->SpawnActor<APaintGun>(PaintGunClass);
 		PlayerPaintGun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
@@ -118,14 +118,20 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(APlayerCharacter, PlayerPaintGun);
 }
 
 void APlayerCharacter::OnFire()
 {
-	if (PlayerPaintGun != nullptr && bCanFire)
+	UE_LOG(LogTemp, Warning, TEXT("OnFire in player called"));
+	if (PlayerPaintGun != nullptr)
 	{
-		bCanFire = false;
-		ServerHandleFire(true);
+		//bCanFire = false;
+		//ServerHandleFire(true);
+		//PlayerPaintGun->TriggerRPCTest();
+		UE_LOG(LogTemp, Warning, TEXT("Firing Weapon from player"));
+		PlayerPaintGun->FireWeapon();
+		PlayerPaintGun->TriggerRPCTest();
 	}
 	//// try and fire a projectile
 	//if (ProjectileClass != nullptr)
@@ -166,14 +172,18 @@ void APlayerCharacter::OnFire()
 
 void APlayerCharacter::OnFireStopped()
 {
-	ServerHandleFire(false);
-	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle_FireCooldownPeriod,
-		this,
-		&APlayerCharacter::ResetAfterCooldown,
-		FireCooldownPeriod,
-		false
-	);
+	//ServerHandleFire(false);
+	//GetWorld()->GetTimerManager().SetTimer(
+	//	TimerHandle_FireCooldownPeriod,
+	//	this,
+	//	&APlayerCharacter::ResetAfterCooldown,
+	//	FireCooldownPeriod,
+	//	false
+	//);
+	if (PlayerPaintGun != nullptr)
+	{
+		PlayerPaintGun->StopFiringWeapon();
+	}
 }
 
 void APlayerCharacter::ResetAfterCooldown()
@@ -258,6 +268,11 @@ void APlayerCharacter::OnHealthUpdate(float PercentagePainted)
 			Destroy();
 		}
 	}
+}
+
+void APlayerCharacter::OnRep_PlayerPaintGun()
+{
+	PlayerPaintGun->SetOwningPlayer(this);
 }
 
 void APlayerCharacter::EndPlay()

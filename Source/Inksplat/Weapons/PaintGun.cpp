@@ -5,6 +5,7 @@
 #include "../Projectiles/InksplatProjectile.h"
 #include "../PlayerActor/PlayerCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/Engine.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -45,10 +46,6 @@ void APaintGun::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 void APaintGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (HasAuthority())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Muzzle location is %s"), *MuzzleLocation->GetComponentLocation().ToString());
-	}
 }
 
 void APaintGun::Server_FireProjectile()
@@ -71,7 +68,6 @@ void APaintGun::Server_SpawnProjectile()
 			//const FRotator SpawnRotation = GetControlRotation();
 			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 			//const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-			DrawDebugSphere(GetWorld(), SpawnLocation, 5.0f, 8, FColor::Red, false, 5.0f);
 			FActorSpawnParameters SpawnParameters;
 			SpawnParameters.Instigator = PlayerOwner;//GetInstigator();
 			SpawnParameters.Owner = PlayerOwner;
@@ -96,4 +92,83 @@ void APaintGun::SetOwningPlayer(APlayerCharacter* NewPlayerOwner)
 void APaintGun::OnRep_PlayerOwner()
 {
 	SetOwningPlayer(PlayerOwner);
+}
+
+void APaintGun::TriggerRPCTest()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Trying to trigger rpc"));
+	RPC_Test();
+}
+
+void APaintGun::RPC_Test_Implementation()
+{
+	if (PlayerOwner->GetLocalRole() == ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RPC IS WORKING"))
+	}
+}
+
+//----TODO clean up code order into sections----
+void APaintGun::FireWeapon()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Trying to fire weapon"));
+	if (bCanFire)
+	{
+		bCanFire = false;
+		UE_LOG(LogTemp, Warning, TEXT("Calling Server handle fire"));
+		ServerHandleFire(true);
+	}
+}
+
+void APaintGun::StopFiringWeapon()
+{
+		OnFireStopped();
+}
+
+void APaintGun::OnFireStopped()
+{
+	ServerHandleFire(false);
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle_FireCooldownPeriod,
+		this,
+		&APaintGun::ResetAfterCooldown,
+		FireCooldownPeriod,
+		false
+	);
+}
+
+void APaintGun::ResetAfterCooldown()
+{
+	bCanFire = true;
+}
+
+void APaintGun::ServerHandleFire_Implementation(bool bShouldFire)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Calling RPC"));
+	UWorld* World = GetWorld();
+	if (PlayerOwner->GetLocalRole() == ROLE_Authority)
+	{
+		if (bShouldFire)
+		{
+			World->GetTimerManager().SetTimer(
+				TimerHandle_TimeBetweenProjectiles,
+				this,
+				&APaintGun::FireGun,
+				TimeBetweenProjectiles,
+				true
+			);
+		}
+		else
+		{
+			World->GetTimerManager().ClearTimer(TimerHandle_TimeBetweenProjectiles);
+		}
+	}
+}
+
+void APaintGun::FireGun()
+{
+	if (HasAuthority())
+	{
+		Server_FireProjectile();
+	}
 }

@@ -43,12 +43,45 @@ protected:
 	UFUNCTION()
 	void OnRep_PlayerOwner();
 
+	UFUNCTION(Server, Reliable)
+	void RPC_Test();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	void Server_FireProjectile();
 
+	void TriggerRPCTest();
+
 	void SetOwningPlayer(APlayerCharacter* NewPlayerOwner);
+
+//moved over logic TODO clean up into sections
+public:
+	void FireWeapon();
+
+	void StopFiringWeapon();
+
+protected:
+	
+	void OnFire();
+
+	void OnFireStopped();
+
+	void ResetAfterCooldown();
+
+	/** Server function for spawning projectiles.*/
+	UFUNCTION(Server, Reliable)
+	void ServerHandleFire(bool bShouldFire);
+
+	void FireGun();
+
+	bool bCanFire = true;
+
+	float TimeBetweenProjectiles = 0.1f;
+	FTimerHandle TimerHandle_TimeBetweenProjectiles;
+
+	float FireCooldownPeriod = 0.25f;
+	FTimerHandle TimerHandle_FireCooldownPeriod;
 
 };
