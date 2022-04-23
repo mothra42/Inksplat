@@ -107,6 +107,7 @@ void AInksplatProjectile::PaintActor()
 	IPaintableObjectInterface* PaintableObject = Cast<IPaintableObjectInterface>(LineTraceHit.Actor);
 	if (PaintableObject)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Paint Color is %s in projectile"), *PaintColor.ToString());
 		PaintableObject->PaintActor(LineTraceHit, PaintColor);
 	}
 	else

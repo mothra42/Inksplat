@@ -69,18 +69,19 @@ void APaintGun::OnRep_PlayerOwner()
 //Methods related to painting properties
 void APaintGun::SetPaintColor(FColor ColorToSet)
 {
-	if (PlayerOwner->GetLocalRole() == ROLE_Authority)
-	{
+	UE_LOG(LogTemp, Warning, TEXT("PaintColor is %s in gun"), *ColorToSet.ToString());
+	//if (PlayerOwner->GetLocalRole() == ROLE_Authority)
+	//{
 		PaintColor = ColorToSet;
-	}
+	//}
 }
 
 void APaintGun::OnRep_PaintColor()
 {
-	if (PlayerOwner->GetLocalRole() < ROLE_Authority)
-	{
+	//if (PlayerOwner->GetLocalRole() < ROLE_Authority)
+	//{
 		SetPaintColor(PaintColor);
-	}
+	//}
 }
 
 //Methods related to firing weapon
@@ -167,7 +168,8 @@ void APaintGun::Server_SpawnProjectile()
 			SpawnParameters.Owner = PlayerOwner;
 
 			// spawn the projectile at the muzzle
-			World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
+			AInksplatProjectile* Projectile = World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
+			Projectile->SetProjectilePaintColor(PaintColor);
 		}
 	}
 }

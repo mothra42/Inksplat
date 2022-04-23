@@ -83,7 +83,9 @@ void APlayerCharacter::BeginPlay()
 		PlayerPaintGun = GetWorld()->SpawnActor<APaintGun>(PaintGunClass);
 		PlayerPaintGun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 		PlayerPaintGun->SetOwningPlayer(this);
+		FColor PlayerPaintColor = FColor::MakeRandomColor();
 		PlayerPaintGun->SetPaintColor(FColor::MakeRandomColor());
+		UE_LOG(LogTemp, Warning, TEXT("Player Paint Color is %s"), *PlayerPaintColor.ToString());
 	}
 }
 
