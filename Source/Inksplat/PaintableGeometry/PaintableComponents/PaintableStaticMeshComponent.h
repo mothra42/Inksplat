@@ -35,6 +35,8 @@ protected:
 	UPROPERTY(Category = "Materials", VisibleAnywhere)
 	UMaterialInstanceDynamic* BrushMaterialInstance;
 
+	class APaintHelper* PaintHelper;
+
 protected:
 	virtual void BeginPlay() override;
 

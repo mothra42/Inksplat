@@ -2,6 +2,7 @@
 
 
 #include "PaintableStaticMeshComponent.h"
+#include "../HelperActors/PaintHelper.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "UObject/ConstructorHelpers.h"
@@ -53,6 +54,8 @@ void UPaintableStaticMeshComponent::BeginPlay()
 		BrushMaterial,
 		this
 	);
+	
+	PaintHelper = Cast<APaintHelper>(UGameplayStatics::GetActorOfClass(GetWorld(), APaintHelper::StaticClass()));
 
 	MeshMaterialInstance->SetTextureParameterValue(FName("ColorMap"), PaintTexture);
 	SetMaterial(0, MeshMaterialInstance);
@@ -72,6 +75,11 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
 	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
 	BrushMaterialInstance->SetVectorParameterValue(FName("TintColor"), Color);
+	if (PaintHelper)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PaintTexture working"));
+		BrushMaterialInstance->SetTextureParameterValue(FName("PaintTexture"), PaintHelper->GetPaintSplatTexture());
+	}
 	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
 
 	return true;
