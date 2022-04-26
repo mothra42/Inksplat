@@ -27,7 +27,13 @@ protected:
 
 	class UMaterial* ParentMaterial;
 
+	UMaterial* BrushMaterial;
+
 	class UMaterialInstanceDynamic* MeshMaterialInstance;
+
+	UMaterialInstanceDynamic* BrushMaterialInstance;
+
+	class APaintHelper* PaintHelper;
 
 private:
 	TArray<int> PaintCoverageArray;
@@ -48,6 +54,10 @@ protected:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
+	void CalculateUVStretchAndScale(const FHitResult& Hit, const FVector2D& UVPosition, float& OutScale, FVector& OutStretch);
+
+	FHitResult ConstructOffsetHitResult(FVector Location, int32 FaceIndex);
+
 	float CalculatePaintCoverage(FVector2D Origin);
 
 public:
