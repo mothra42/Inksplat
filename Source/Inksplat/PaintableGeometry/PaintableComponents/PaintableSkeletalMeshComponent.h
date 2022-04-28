@@ -31,6 +31,7 @@ protected:
 
 	class UMaterialInstanceDynamic* MeshMaterialInstance;
 
+	UPROPERTY(Category = "Materials", VisibleAnywhere)
 	UMaterialInstanceDynamic* BrushMaterialInstance;
 
 	class APaintHelper* PaintHelper;

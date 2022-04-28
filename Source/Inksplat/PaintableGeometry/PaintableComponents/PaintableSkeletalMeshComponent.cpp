@@ -77,36 +77,42 @@ bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLi
 {
 	FVector2D UVPosition;
 	USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(Hit, UVPosition);
-
+	UE_LOG(LogTemp, Warning, TEXT("Collision is %s"), *UVPosition.ToString());
 	FVector MaterialStretch;
 	float MaterialScale;
 
 	CalculateUVStretchAndScale(Hit, UVPosition, MaterialScale, MaterialStretch);
+	UE_LOG(LogTemp, Warning, TEXT("Scale is %f"), MaterialScale);
+	UE_LOG(LogTemp, Warning, TEXT("Stretch is %s"), *MaterialStretch.ToString());
+
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
 	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
 	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
 	BrushMaterialInstance->SetVectorParameterValue(FName("TintColor"), Color);
 	if (PaintHelper)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PaintTexture working in skeleton"));
 		BrushMaterialInstance->SetTextureParameterValue(FName("PaintTexture"), PaintHelper->GetPaintSplatTexture());
 	}
 	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
 
+	//OLD METHOD TO BE REMOVED
+	//UCanvas* Canvas;
+	//FVector2D CanvasSize;
+	//FDrawToRenderTargetContext Context;
 	//UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, PaintTexture, Canvas, CanvasSize, Context);
-
-	//TODO make this work for textures as well. Will probably need to include one in the constructor.
-	//probably refactor this to exist in its own function
+	//
+	////TODO make this work for textures as well. Will probably need to include one in the constructor.
+	////probably refactor this to exist in its own function
 	//FVector2D TileItemPosition = CanvasSize * UVPosition;
 	//if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	//{
-	//	float PaintCoverage = CalculatePaintCoverage(TileItemPosition);
+	//    float PaintCoverage = CalculatePaintCoverage(TileItemPosition);
 	//}
 	//
 	//FCanvasTileItem RectItem(
-	//	TileItemPosition,
-	//	FVector2D(22.62, 22.62), //size
-	//	Color
+	//    TileItemPosition,
+	//    FVector2D(42.62, 42.62), //size
+	//    Color
 	//);
 	//
 	//Canvas->DrawItem(RectItem);
@@ -123,8 +129,8 @@ void UPaintableSkeletalMeshComponent::CalculateUVStretchAndScale(const FHitResul
 
 	FVector2D UVOffsetOne;
 	FVector2D UVOffsetTwo;
-	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorOne * 25.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetOne);
-	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorTwo * 25.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetTwo);
+	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorOne * 3.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetOne);
+	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorTwo * 3.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetTwo);
 
 	OutScale = ((UVOffsetOne - UVPosition) + (UVOffsetTwo - UVPosition)).Size();
 
@@ -148,6 +154,7 @@ FHitResult UPaintableSkeletalMeshComponent::ConstructOffsetHitResult(FVector Loc
 //TODO Consider adding a fourth argument that is a reference to a reference texture to check for the bounds of the UV map
 float UPaintableSkeletalMeshComponent::CalculatePaintCoverage(FVector2D Origin)
 {
+	//TODO revisit this calculation to work in line with new painting method
 	/*A Note on some magic numbers being used. 1024 is the size of the texture both U and V.
 	* 1024 * 1024 is 1048576. If I paint squares that are 22.62 X 22.62 then the total pixel count is 512
 	* 1048567 / 512 is 2048. So there are 2048 distinct tiles of 512 pixels. Which is where these numbers come from.
