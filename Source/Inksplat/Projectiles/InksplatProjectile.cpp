@@ -54,6 +54,7 @@ void AInksplatProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AInksplatProjectile, HitLocation);
+	DOREPLIFETIME(AInksplatProjectile, HitResult);
 	DOREPLIFETIME(AInksplatProjectile, PaintColor);
 }
 
@@ -62,6 +63,7 @@ void AInksplatProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, 
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
 		HitLocation = Hit.ImpactPoint;
+		HitResult = Hit;
 		SetActorHiddenInGame(true);
 		CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
@@ -71,6 +73,11 @@ void AInksplatProjectile::OnRep_MeshHit()
 {
 	PaintActor();
 	Destroy();
+}
+
+void AInksplatProjectile::OnRep_HitResultChanged()
+{
+	return;
 }
 
 void AInksplatProjectile::OnRep_PaintColor()
@@ -87,9 +94,7 @@ void AInksplatProjectile::Destroyed()
 
 void AInksplatProjectile::PaintActor()
 {
-	FVector TraceBeginLocation = GetActorLocation();
-	FVector TraceDirection = UKismetMathLibrary::GetDirectionUnitVector(TraceBeginLocation, HitLocation);
-	FVector TraceEndLocation = TraceBeginLocation + 100 * TraceDirection;
+	FVector TraceEndLocation = HitLocation - (100 * HitResult.ImpactNormal);
 
 	FHitResult LineTraceHit;
 	FCollisionQueryParams TraceParams;
@@ -98,7 +103,7 @@ void AInksplatProjectile::PaintActor()
 	TraceParams.bReturnFaceIndex = true;
 	GetWorld()->LineTraceSingleByChannel(
 		LineTraceHit,
-		TraceBeginLocation,
+		HitLocation,
 		TraceEndLocation,
 		ECC_Visibility,
 		TraceParams

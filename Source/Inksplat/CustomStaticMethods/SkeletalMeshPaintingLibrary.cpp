@@ -11,7 +11,8 @@ bool USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(const struct FHitResul
     if (UPrimitiveComponent* HitPrimComp = Hit.Component.Get())
     {
         TArray<FVertexUVPair> AllVertices;
-        const FVector LocalHitPos = HitPrimComp->GetComponentToWorld().InverseTransformPosition(Hit.Location);
+        const FVector LocalHitPos = HitPrimComp->GetComponentTransform().InverseTransformPosition(Hit.Location);
+            //HitPrimComp->GetComponentToWorld().InverseTransformPosition(Hit.Location);
 
         if (USkeletalMeshComponent* SkelComp = Cast<USkeletalMeshComponent>(HitPrimComp))
         {

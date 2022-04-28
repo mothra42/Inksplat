@@ -27,6 +27,9 @@ protected:
 	UPROPERTY(ReplicatedUsing=OnRep_MeshHit)
 	FVector HitLocation;
 
+	UPROPERTY(ReplicatedUsing = OnRep_HitResultChanged)
+	FHitResult HitResult;
+
 	UPROPERTY(ReplicatedUsing = OnRep_PaintColor)
 	FColor PaintColor;
 
@@ -45,6 +48,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_MeshHit();
+
+	UFUNCTION()
+	void OnRep_HitResultChanged();
 
 	UFUNCTION()
 	void OnRep_PaintColor();
