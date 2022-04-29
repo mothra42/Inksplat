@@ -57,7 +57,7 @@ protected:
 private:
 	void CalculateUVStretchAndScale(const FHitResult& Hit, const FVector2D& UVPosition, float& OutScale, FVector& OutStretch);
 
-	FHitResult ConstructOffsetHitResult(FVector Location, int32 FaceIndex);
+	FHitResult ConstructOffsetHitResult(FVector Location, int32 FaceIndex, FName BoneName);
 
 	float CalculatePaintCoverage(FVector2D Origin);
 

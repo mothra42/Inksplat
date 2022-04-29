@@ -15,6 +15,7 @@
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Containers/Queue.h"
+#include "DrawDebugHelpers.h"
 
 UPaintableSkeletalMeshComponent::UPaintableSkeletalMeshComponent()
 {
@@ -81,13 +82,13 @@ bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLi
 	FVector MaterialStretch;
 	float MaterialScale;
 
-	CalculateUVStretchAndScale(Hit, UVPosition, MaterialScale, MaterialStretch);
+	//CalculateUVStretchAndScale(Hit, UVPosition, MaterialScale, MaterialStretch);
 	UE_LOG(LogTemp, Warning, TEXT("Scale is %f"), MaterialScale);
 	UE_LOG(LogTemp, Warning, TEXT("Stretch is %s"), *MaterialStretch.ToString());
 
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
-	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
-	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
+	//BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
+	//BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
 	BrushMaterialInstance->SetVectorParameterValue(FName("TintColor"), Color);
 	if (PaintHelper)
 	{
@@ -129,8 +130,13 @@ void UPaintableSkeletalMeshComponent::CalculateUVStretchAndScale(const FHitResul
 
 	FVector2D UVOffsetOne;
 	FVector2D UVOffsetTwo;
-	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorOne * 3.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetOne);
-	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorTwo * 3.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetTwo);
+	DrawDebugSphere(GetWorld(), Hit.Location, 3, 8, FColor::Red, false, 3.0f);
+	DrawDebugSphere(GetWorld(), (OrthogonalVectorOne * 10.f) + Hit.Location, 3, 8, FColor::Blue, false, 3.0f);
+	DrawDebugSphere(GetWorld(), (OrthogonalVectorTwo * 10.f) + Hit.Location, 3, 8, FColor::Green, false, 3.0f);
+	USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(ConstructOffsetHitResult(((OrthogonalVectorOne * 5.f) + Hit.Location), Hit.FaceIndex, Hit.BoneName), UVOffsetOne);
+	USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(ConstructOffsetHitResult(((OrthogonalVectorTwo * 5.f) + Hit.Location), Hit.FaceIndex, Hit.BoneName), UVOffsetTwo);
+	//UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorOne * 3.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetOne);
+	//UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorTwo * 3.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetTwo);
 
 	OutScale = ((UVOffsetOne - UVPosition) + (UVOffsetTwo - UVPosition)).Size();
 
@@ -141,12 +147,13 @@ void UPaintableSkeletalMeshComponent::CalculateUVStretchAndScale(const FHitResul
 	OutStretch.Z = 0;
 }
 
-FHitResult UPaintableSkeletalMeshComponent::ConstructOffsetHitResult(FVector Location, int32 FaceIndex)
+FHitResult UPaintableSkeletalMeshComponent::ConstructOffsetHitResult(FVector Location, int32 FaceIndex, FName BoneName)
 {
 	FHitResult HitResult;
 	HitResult.Component = this;
 	HitResult.Location = Location;
 	HitResult.FaceIndex = FaceIndex;
+	HitResult.BoneName = BoneName;
 
 	return HitResult;
 }
