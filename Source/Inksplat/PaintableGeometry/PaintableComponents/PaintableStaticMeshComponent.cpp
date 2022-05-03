@@ -65,19 +65,21 @@ void UPaintableStaticMeshComponent::BeginPlay()
 bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLinearColor& Color)
 {
 	FVector2D UVPosition;
-	UGameplayStatics::FindCollisionUV(Hit, 0, UVPosition);
-
+	UGameplayStatics::FindCollisionUV(Hit, UVChannelToPaint, UVPosition);
+	UE_LOG(LogTemp, Warning, TEXT("UV Collision at %s"), *UVPosition.ToString());
 	FVector MaterialStretch;
 	float MaterialScale;
 	
 	CalculateUVStretchAndScale(Hit, UVPosition, MaterialScale, MaterialStretch);
+	UE_LOG(LogTemp, Warning, TEXT("UV Collision at %s"), *UVPosition.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("Material Scale, %f"), MaterialScale);
+	UE_LOG(LogTemp, Warning, TEXT("Material Stretch, %s"), *MaterialStretch.ToString());
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
-	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
+	//BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
 	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
 	BrushMaterialInstance->SetVectorParameterValue(FName("TintColor"), Color);
 	if (PaintHelper)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PaintTexture working"));
 		BrushMaterialInstance->SetTextureParameterValue(FName("PaintTexture"), PaintHelper->GetPaintSplatTexture());
 	}
 	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
@@ -94,8 +96,8 @@ void UPaintableStaticMeshComponent::CalculateUVStretchAndScale(const FHitResult&
 
 	FVector2D UVOffsetOne;
 	FVector2D UVOffsetTwo;
-	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorOne * 25.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetOne);
-	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorTwo * 25.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetTwo);
+	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorOne * 25.f) + Hit.Location), Hit.FaceIndex), UVChannelToPaint, UVOffsetOne);
+	UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorTwo * 25.f) + Hit.Location), Hit.FaceIndex), UVChannelToPaint, UVOffsetTwo);
 
 	OutScale = ((UVOffsetOne - UVPosition) + (UVOffsetTwo - UVPosition)).Size();
 

@@ -34,6 +34,12 @@ protected:
 	UPROPERTY(Category = "Materials", VisibleAnywhere)
 	UMaterialInstanceDynamic* BrushMaterialInstance;
 
+	UPROPERTY(Category = "Texture Correction", EditDefaultsOnly)
+	float MaterialScale = 0.2;
+
+	UPROPERTY(Category = "Texture Correction", EditDefaultsOnly)
+	FVector MaterialStretch = FVector(1.0, 1.0, 0.0);
+
 	class APaintHelper* PaintHelper;
 
 private:

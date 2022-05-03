@@ -44,6 +44,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Shot Size")
 	FVector2D BaseSplatSize = FVector2D(100.f, 100.f);
 
+	UPROPERTY(EditDefaultsOnly, Category = "Painting Settings")
+	int32 UVChannelToPaint = 0;
+
 	FVector CalculatePaintScale(FVector Normal);
 
 private:

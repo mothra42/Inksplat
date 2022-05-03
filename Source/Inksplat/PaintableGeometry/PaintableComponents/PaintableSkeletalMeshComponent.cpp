@@ -78,17 +78,10 @@ bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLi
 {
 	FVector2D UVPosition;
 	USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(Hit, UVPosition);
-	UE_LOG(LogTemp, Warning, TEXT("Collision is %s"), *UVPosition.ToString());
-	FVector MaterialStretch;
-	float MaterialScale;
-
-	//CalculateUVStretchAndScale(Hit, UVPosition, MaterialScale, MaterialStretch);
-	UE_LOG(LogTemp, Warning, TEXT("Scale is %f"), MaterialScale);
-	UE_LOG(LogTemp, Warning, TEXT("Stretch is %s"), *MaterialStretch.ToString());
 
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
-	//BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
-	//BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
+	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
+	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
 	BrushMaterialInstance->SetVectorParameterValue(FName("TintColor"), Color);
 	if (PaintHelper)
 	{
