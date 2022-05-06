@@ -75,7 +75,7 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 	UE_LOG(LogTemp, Warning, TEXT("Material Scale, %f"), MaterialScale);
 	UE_LOG(LogTemp, Warning, TEXT("Material Stretch, %s"), *MaterialStretch.ToString());
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
-	//BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
+	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
 	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
 	BrushMaterialInstance->SetVectorParameterValue(FName("TintColor"), Color);
 	if (PaintHelper)
