@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "../Interfaces/AbilityInterface.h"
+#include "BaseAbilityComponent.h"
 #include "ForcePushAbilityComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class INKSPLAT_API UForcePushAbilityComponent : public UActorComponent, public IAbilityInterface
+class INKSPLAT_API UForcePushAbilityComponent : public UBaseAbilityComponent
 {
 	GENERATED_BODY()
 
@@ -31,14 +31,23 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerExecuteAbility();
 
+	TArray<APawn*> FindAffectedPawns();
 
-//Methods and variables inherited from interface
 protected:
+	UPROPERTY(ReplicatedUsing = OnRep_CanUseAbility)
 	bool bCanUseAbility = true;
-	
+
 	UPROPERTY(Category = "Cool Down Settings", EditDefaultsOnly)
 	float CoolDownTime = 0.5;
 
+	FTimerHandle TimerHandle_AbilityCooldown;
+
+	UFUNCTION()
+	void OnRep_CanUseAbility();
+
+
+//Methods and variables inherited from interface
+protected:
 	virtual void ResetAfterCoolDown() override;
 
 public:

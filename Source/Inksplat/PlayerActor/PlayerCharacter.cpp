@@ -3,6 +3,8 @@
 #include "PlayerCharacter.h"
 #include "../PaintableGeometry/PaintableComponents/PaintableSkeletalMeshComponent.h"
 #include "../Weapons/PaintGun.h"
+#include "../Interfaces/AbilityInterface.h"
+#include"../AbilityComponents/ForcePushAbilityComponent.h"
 #include "Materials/Material.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -87,6 +89,18 @@ void APlayerCharacter::BeginPlay()
 		PlayerPaintGun->SetPaintColor(FColor::MakeRandomColor());
 		UE_LOG(LogTemp, Warning, TEXT("Player Paint Color is %s"), *PlayerPaintColor.ToString());
 	}
+
+	PrimaryAbilityComponent = NewObject<UBaseAbilityComponent>(this, PrimaryAbilityComponentClass);
+	if (PrimaryAbilityComponent)
+	{
+		PrimaryAbilityComponent->RegisterComponent();
+	}
+
+	SecondaryAbilityComponent = NewObject<UBaseAbilityComponent>(this, SecondaryAbilityComponentClass);
+	if (SecondaryAbilityComponent)
+	{
+		SecondaryAbilityComponent->RegisterComponent();
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -104,6 +118,11 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerCharacter::OnFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &APlayerCharacter::OnFireStopped);
+
+	// Bind ability event
+	PlayerInputComponent->BindAction("UsePrimaryAbility", IE_Pressed, this, &APlayerCharacter::UsePrimaryAbility);
+	PlayerInputComponent->BindAction("UseSecondaryAbility", IE_Pressed, this, &APlayerCharacter::UseSecondaryAbility);
+
 
 	// Bind movement events
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
@@ -137,6 +156,22 @@ void APlayerCharacter::OnFireStopped()
 	if (PlayerPaintGun != nullptr)
 	{
 		PlayerPaintGun->StopFiringWeapon();
+	}
+}
+
+void APlayerCharacter::UsePrimaryAbility()
+{
+	if (PrimaryAbilityComponent != nullptr)
+	{
+		PrimaryAbilityComponent->UseAbility();
+	}
+}
+
+void APlayerCharacter::UseSecondaryAbility()
+{
+	if (SecondaryAbilityComponent != nullptr)
+	{
+		SecondaryAbilityComponent->UseAbility();
 	}
 }
 

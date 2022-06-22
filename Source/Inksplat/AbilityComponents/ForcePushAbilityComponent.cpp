@@ -2,7 +2,7 @@
 
 
 #include "ForcePushAbilityComponent.h"
-//#include "Engine/Engine.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
@@ -11,7 +11,7 @@ UForcePushAbilityComponent::UForcePushAbilityComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
+	//Replicates
 	// ...
 }
 
@@ -44,18 +44,66 @@ void UForcePushAbilityComponent::TickComponent(float DeltaTime, ELevelTick TickT
 void UForcePushAbilityComponent::UseAbility()
 {
 	//if the ability is useable call server execute ability
-	UE_LOG(LogTemp, Warning, TEXT("ExecutingAbility"));
+	UE_LOG(LogTemp, Warning, TEXT("Executing Ability"));
+	UE_LOG(LogTemp, Warning, TEXT("Owner is %s"), *GetOwner()->GetName());
+	if (bCanUseAbility)
+	{
+		//ServerExecuteAbility();
+	}
 	return;
 }
 
 void UForcePushAbilityComponent::ServerExecuteAbility_Implementation()
 {
 	//TODO do physics things to objects on server here.
+	TArray<APawn*> AffectedPawns = FindAffectedPawns();
+	//start cooldown
+	bCanUseAbility = false;
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle_AbilityCooldown,
+		this,
+		&UForcePushAbilityComponent::ResetAfterCoolDown,
+		false
+	);
+
+}
+
+TArray<APawn*> UForcePushAbilityComponent::FindAffectedPawns()
+{
+	TArray<APawn*> AffectedPawns;
+	TArray<FHitResult> OutHits;
+	FVector StartPosition = GetOwner()->GetActorLocation();
+	FVector EndPosition = StartPosition + FVector(0.1, 0.1, 0.1);
+
+	UKismetSystemLibrary::BoxTraceMultiByProfile(
+		GetWorld(),
+		StartPosition,
+		EndPosition,
+		FVector(10, 10, 10),
+		FRotator(0, 0, 0),
+		FName("Pawn"),
+		false,
+		TArray<AActor*>{GetOwner()},
+		EDrawDebugTrace::ForDuration,
+		OutHits,
+		true
+	);
+
+	for (FHitResult HitResult : OutHits)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Found Actor %s"), *HitResult.Actor->GetName());
+	}
+	return AffectedPawns;
 }
 
 void UForcePushAbilityComponent::ResetAfterCoolDown()
 {
-	return;
+	bCanUseAbility = true;
+}
+
+void UForcePushAbilityComponent::OnRep_CanUseAbility()
+{
+	//TODO update UI from this method.
 }
 
 // Force push should work as a simple call to execute a method on the server, much like firing a gun.

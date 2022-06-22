@@ -47,6 +47,19 @@ class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerPaintGun)
 	APaintGun* PlayerPaintGun;
 
+
+	//Abilities
+	UPROPERTY(EditAnywhere, Category = Abilities)
+	TSubclassOf<class UBaseAbilityComponent> PrimaryAbilityComponentClass;
+
+	UBaseAbilityComponent* PrimaryAbilityComponent;
+
+	UPROPERTY(EditAnywhere, Category = Abilities)
+	TSubclassOf<class UBaseAbilityComponent> SecondaryAbilityComponentClass;
+
+	UBaseAbilityComponent* SecondaryAbilityComponent;
+
+	//Paint Material
 	UMaterial* PaintableMaterialParent;
 
 public:
@@ -87,6 +100,12 @@ protected:
 	void OnFire();
 
 	void OnFireStopped();
+
+//Ability Methods
+protected:
+	void UsePrimaryAbility();
+
+	void UseSecondaryAbility();
 
 //Movement Methods
 protected:
