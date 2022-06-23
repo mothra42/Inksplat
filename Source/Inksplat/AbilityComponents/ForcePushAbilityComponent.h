@@ -44,6 +44,20 @@ protected:
 
 	UFUNCTION()
 	void OnRep_CanUseAbility();
+protected:
+	//sweep properties
+	UPROPERTY(Category = "Box Trace Settings", EditDefaultsOnly)
+	float BoxLength = 250.0;
+
+	UPROPERTY(Category = "Box Trace Settings", EditDefaultsOnly)
+	float BoxWidth = 400.0;
+
+	UPROPERTY(Category = "Box Trace Settings", EditDefaultsOnly)
+	float BoxHeight = 100.0;
+
+	UPROPERTY(Category = "Box Trace Settings", EditDefaultsOnly)
+	float BoxTraceOffset = 300.0;
+
 
 
 //Methods and variables inherited from interface

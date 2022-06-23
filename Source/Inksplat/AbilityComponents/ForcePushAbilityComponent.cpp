@@ -4,6 +4,7 @@
 #include "ForcePushAbilityComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values for this component's properties
 UForcePushAbilityComponent::UForcePushAbilityComponent()
@@ -11,8 +12,7 @@ UForcePushAbilityComponent::UForcePushAbilityComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-	//Replicates
-	// ...
+	SetIsReplicated(true);
 }
 
 
@@ -20,9 +20,6 @@ UForcePushAbilityComponent::UForcePushAbilityComponent()
 void UForcePushAbilityComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
 }
 
 void UForcePushAbilityComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -48,21 +45,23 @@ void UForcePushAbilityComponent::UseAbility()
 	UE_LOG(LogTemp, Warning, TEXT("Owner is %s"), *GetOwner()->GetName());
 	if (bCanUseAbility)
 	{
-		//ServerExecuteAbility();
+		ServerExecuteAbility();
 	}
 	return;
 }
 
 void UForcePushAbilityComponent::ServerExecuteAbility_Implementation()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Executing on server"));
 	//TODO do physics things to objects on server here.
 	TArray<APawn*> AffectedPawns = FindAffectedPawns();
-	//start cooldown
+	////start cooldown
 	bCanUseAbility = false;
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle_AbilityCooldown,
 		this,
 		&UForcePushAbilityComponent::ResetAfterCoolDown,
+		CoolDownTime,
 		false
 	);
 
@@ -70,17 +69,19 @@ void UForcePushAbilityComponent::ServerExecuteAbility_Implementation()
 
 TArray<APawn*> UForcePushAbilityComponent::FindAffectedPawns()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Finding Affected Pawns"));
 	TArray<APawn*> AffectedPawns;
 	TArray<FHitResult> OutHits;
-	FVector StartPosition = GetOwner()->GetActorLocation();
+	FVector StartPosition = GetOwner()->GetActorLocation() + 
+		GetOwner()->GetActorForwardVector() * BoxTraceOffset;
 	FVector EndPosition = StartPosition + FVector(0.1, 0.1, 0.1);
-
+	FRotator OwnerRotation = GetOwner()->GetActorRotation();
 	UKismetSystemLibrary::BoxTraceMultiByProfile(
 		GetWorld(),
 		StartPosition,
 		EndPosition,
-		FVector(10, 10, 10),
-		FRotator(0, 0, 0),
+		FVector(BoxLength, BoxWidth, BoxHeight),
+		FRotator(0, OwnerRotation.Yaw, 0),
 		FName("Pawn"),
 		false,
 		TArray<AActor*>{GetOwner()},
@@ -98,12 +99,14 @@ TArray<APawn*> UForcePushAbilityComponent::FindAffectedPawns()
 
 void UForcePushAbilityComponent::ResetAfterCoolDown()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Cooldown is over"));
 	bCanUseAbility = true;
 }
 
 void UForcePushAbilityComponent::OnRep_CanUseAbility()
 {
 	//TODO update UI from this method.
+	//bCanUseAbility = bCanUseAbility;
 }
 
 // Force push should work as a simple call to execute a method on the server, much like firing a gun.
