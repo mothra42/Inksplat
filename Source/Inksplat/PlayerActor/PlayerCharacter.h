@@ -52,11 +52,13 @@ class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 	UPROPERTY(EditAnywhere, Category = Abilities)
 	TSubclassOf<class UBaseAbilityComponent> PrimaryAbilityComponentClass;
 
+	UPROPERTY(replicated)
 	UBaseAbilityComponent* PrimaryAbilityComponent;
 
 	UPROPERTY(EditAnywhere, Category = Abilities)
 	TSubclassOf<class UBaseAbilityComponent> SecondaryAbilityComponentClass;
 
+	UPROPERTY(replicated)
 	UBaseAbilityComponent* SecondaryAbilityComponent;
 
 	//Paint Material

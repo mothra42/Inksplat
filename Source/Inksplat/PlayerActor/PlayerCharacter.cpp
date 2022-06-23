@@ -90,15 +90,15 @@ void APlayerCharacter::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("Player Paint Color is %s"), *PlayerPaintColor.ToString());
 	}
 
-	PrimaryAbilityComponent = NewObject<UBaseAbilityComponent>(this, PrimaryAbilityComponentClass);
-	if (PrimaryAbilityComponent)
+	if (PrimaryAbilityComponentClass != nullptr && GetLocalRole() == ROLE_Authority)
 	{
+		PrimaryAbilityComponent = NewObject<UBaseAbilityComponent>(this, PrimaryAbilityComponentClass);
 		PrimaryAbilityComponent->RegisterComponent();
 	}
 
-	SecondaryAbilityComponent = NewObject<UBaseAbilityComponent>(this, SecondaryAbilityComponentClass);
-	if (SecondaryAbilityComponent)
+	if (SecondaryAbilityComponentClass != nullptr && GetLocalRole() == ROLE_Authority)
 	{
+		SecondaryAbilityComponent = NewObject<UBaseAbilityComponent>(this, SecondaryAbilityComponentClass);
 		SecondaryAbilityComponent->RegisterComponent();
 	}
 }
@@ -141,6 +141,8 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(APlayerCharacter, PlayerPaintGun);
+	DOREPLIFETIME(APlayerCharacter, PrimaryAbilityComponent);
+	DOREPLIFETIME(APlayerCharacter, SecondaryAbilityComponent);
 }
 
 void APlayerCharacter::OnFire()
