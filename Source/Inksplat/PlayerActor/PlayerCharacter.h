@@ -142,7 +142,7 @@ protected:
 	void EndPlay();
 
 public:
-	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color) override;
+	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary = false, float TempPaintLifetime = 0.f) override;
 
 
 	//Called from paintable mesh whenever it is painted. Paintable mesh class holds all info related to painting coverage
@@ -151,6 +151,9 @@ public:
 public:
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
+	UPaintableSkeletalMeshComponent* GetFullBodyMesh() const { return FullBodyMesh; }
+
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 

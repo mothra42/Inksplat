@@ -3,6 +3,9 @@
 
 #include "ForcePushAbilityComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "../PlayerActor/PlayerCharacter.h"
+#include "../PaintableGeometry/PaintableComponents/PaintableSkeletalMeshComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
 
@@ -52,11 +55,13 @@ void UForcePushAbilityComponent::UseAbility()
 
 void UForcePushAbilityComponent::ServerExecuteAbility_Implementation()
 {
+	bCanUseAbility = false;
 	UE_LOG(LogTemp, Warning, TEXT("Executing on server"));
 	//TODO do physics things to objects on server here.
-	TArray<APawn*> AffectedPawns = FindAffectedPawns();
+	TSet<APawn*> AffectedPawns = FindAffectedPawns();
+	ApplyImpulseToPawns(AffectedPawns);
 	////start cooldown
-	bCanUseAbility = false;
+
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle_AbilityCooldown,
 		this,
@@ -67,10 +72,9 @@ void UForcePushAbilityComponent::ServerExecuteAbility_Implementation()
 
 }
 
-TArray<APawn*> UForcePushAbilityComponent::FindAffectedPawns()
+TSet<APawn*> UForcePushAbilityComponent::FindAffectedPawns()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Finding Affected Pawns"));
-	TArray<APawn*> AffectedPawns;
+	TSet<APawn*> AffectedPawns;
 	TArray<FHitResult> OutHits;
 	FVector StartPosition = GetOwner()->GetActorLocation() + 
 		GetOwner()->GetActorForwardVector() * BoxTraceOffset;
@@ -85,16 +89,70 @@ TArray<APawn*> UForcePushAbilityComponent::FindAffectedPawns()
 		FName("Pawn"),
 		false,
 		TArray<AActor*>{GetOwner()},
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,
 		OutHits,
 		true
 	);
 
+	//TODO this could be further optimized, since each physics component counts as a hit.
 	for (FHitResult HitResult : OutHits)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Found Actor %s"), *HitResult.Actor->GetName());
+		APawn* PawnToAdd = Cast<APawn>(HitResult.Actor);
+		if (PawnToAdd != nullptr)
+		{
+			AffectedPawns.Add(PawnToAdd);
+		}
 	}
 	return AffectedPawns;
+}
+
+//TODO give this method a better name like ApplyImpusleAndPaint
+void UForcePushAbilityComponent::ApplyImpulseToPawns(const TSet<APawn*>& AffectedPawns)
+{
+	for (APawn* Pawn : AffectedPawns)
+	{
+		APlayerCharacter* OtherPlayer = Cast<APlayerCharacter>(Pawn);
+		if (OtherPlayer != nullptr)
+		{
+			ApplyTempPaintToHitPlayer(OtherPlayer);
+
+			FVector ForceToApply = CalculateForceToApply(Pawn->GetActorLocation());
+			OtherPlayer->GetCharacterMovement()->AddImpulse(ForceToApply);
+		}
+	}
+}
+
+FVector UForcePushAbilityComponent::CalculateForceToApply(FVector PawnLocation)
+{
+	FVector ForceOrigin = GetOwner()->GetActorLocation();
+	float Radius = FVector::Distance(ForceOrigin, PawnLocation);
+	//TODO make clamp values customizeable in BP
+	float CorrectedRadius = FMath::Clamp(Radius, 200.f, 240.f);
+	FVector ForceDirection = ((PawnLocation - ForceOrigin) + FVector(0, 0, 100)).GetSafeNormal();
+	DrawDebugLine(GetWorld(), ForceOrigin,
+		ForceOrigin + (ForceDirection * 500), FColor::Green, false, 5.0f);
+	return ForceDirection * (BaseForce / CorrectedRadius);
+}
+
+void UForcePushAbilityComponent::ApplyTempPaintToHitPlayer_Implementation(APlayerCharacter* OtherPlayer)
+{
+	FVector TraceBeginLocation = GetOwner()->GetActorLocation();
+	FVector TraceEndLocation = OtherPlayer->GetActorLocation();
+
+	FHitResult LineTraceHit;
+	FCollisionQueryParams TraceParams;
+	TraceParams.bTraceComplex = true;
+	TraceParams.AddIgnoredActor(GetOwner());
+	TraceParams.bReturnFaceIndex = true;
+	GetWorld()->LineTraceSingleByChannel(
+		LineTraceHit,
+		TraceBeginLocation,
+		TraceEndLocation,
+		ECC_Visibility,
+		TraceParams
+	);
+
+	OtherPlayer->PaintActor(LineTraceHit, FColor::Red, false);
 }
 
 void UForcePushAbilityComponent::ResetAfterCoolDown()
@@ -106,7 +164,6 @@ void UForcePushAbilityComponent::ResetAfterCoolDown()
 void UForcePushAbilityComponent::OnRep_CanUseAbility()
 {
 	//TODO update UI from this method.
-	//bCanUseAbility = bCanUseAbility;
 }
 
 // Force push should work as a simple call to execute a method on the server, much like firing a gun.

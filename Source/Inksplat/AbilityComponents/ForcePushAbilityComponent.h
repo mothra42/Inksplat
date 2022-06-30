@@ -8,7 +8,7 @@
 #include "ForcePushAbilityComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class INKSPLAT_API UForcePushAbilityComponent : public UBaseAbilityComponent
 {
 	GENERATED_BODY()
@@ -31,7 +31,14 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerExecuteAbility();
 
-	TArray<APawn*> FindAffectedPawns();
+	TSet<APawn*> FindAffectedPawns();
+
+	void ApplyImpulseToPawns(const TSet<APawn*>& AffectedPawns);
+
+	FVector CalculateForceToApply(FVector PawnLocation);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void ApplyTempPaintToHitPlayer(class APlayerCharacter* OtherPlayer);
 
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CanUseAbility)
@@ -57,6 +64,10 @@ protected:
 
 	UPROPERTY(Category = "Box Trace Settings", EditDefaultsOnly)
 	float BoxTraceOffset = 300.0;
+
+	//Force properties
+	UPROPERTY(Category = "Force Settings", EditDefaultsOnly)
+	float BaseForce = 30000000.0;
 
 
 

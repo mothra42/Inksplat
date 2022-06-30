@@ -208,9 +208,9 @@ void APlayerCharacter::LookUpAtRate(float Rate)
 }
 
 
-void APlayerCharacter::PaintActor(const FHitResult& Hit, const FLinearColor& Color)
+void APlayerCharacter::PaintActor(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary, float TempPaintLifetime)
 {
-	FullBodyMesh->PaintMesh(Hit, Color);
+	FullBodyMesh->PaintMesh(Hit, Color, bIsTemporary);
 }
 
 void APlayerCharacter::OnHealthUpdate(float PercentagePainted)

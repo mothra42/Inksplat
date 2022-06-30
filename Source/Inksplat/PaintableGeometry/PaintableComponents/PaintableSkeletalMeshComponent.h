@@ -20,10 +20,12 @@ public:
 public:
 	//returns true if successfuly draws to mesh
 	UFUNCTION(BlueprintCallable)
-	bool PaintMesh(const FHitResult& Hit, const FLinearColor& Color);
+	bool PaintMesh(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary = false, float TempPaintLifetime = 0.f);
 
 protected:
 	class UTextureRenderTarget2D* PaintTexture;
+
+	UTextureRenderTarget2D* TempPaintTexture;
 
 	class UMaterial* ParentMaterial;
 
@@ -66,6 +68,8 @@ private:
 	FHitResult ConstructOffsetHitResult(FVector Location, int32 FaceIndex, FName BoneName);
 
 	float CalculatePaintCoverage(FVector2D Origin);
+
+	void RemoveTemporaryPaint();
 
 public:
 	void SetMaxPaintedTiles(int32 MaxTilesToSet) { MaxPaintedTiles = MaxTilesToSet; }

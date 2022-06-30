@@ -7,7 +7,7 @@
 #include "BaseAbilityComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class INKSPLAT_API UBaseAbilityComponent : public UActorComponent
 {
 	GENERATED_BODY()

@@ -20,7 +20,7 @@
 UPaintableSkeletalMeshComponent::UPaintableSkeletalMeshComponent()
 {
 	static ConstructorHelpers::FObjectFinder<UMaterial> PaintableMaterialFinder(
-		TEXT("/Game/PaintableMaterials/M_PaintableMaterial")
+		TEXT("/Game/PaintableMaterials/M_PaintableMaterial_PlayerActor")
 	);
 	static ConstructorHelpers::FObjectFinder<UMaterial> BrushMaterialFinder(
 		TEXT("/Game/PaintableMaterials/M_Brush")
@@ -51,6 +51,14 @@ void UPaintableSkeletalMeshComponent::BeginPlay()
 		ClearColor
 	);
 
+	TempPaintTexture = UKismetRenderingLibrary::CreateRenderTarget2D(
+		GetWorld(),
+		2048,
+		2048,
+		RTF_RGBA16f,
+		ClearColor
+	);
+
 	MeshMaterialInstance = UMaterialInstanceDynamic::Create(
 		ParentMaterial,
 		this
@@ -64,6 +72,7 @@ void UPaintableSkeletalMeshComponent::BeginPlay()
 	PaintHelper = Cast<APaintHelper>(UGameplayStatics::GetActorOfClass(GetWorld(), APaintHelper::StaticClass()));
 
 	MeshMaterialInstance->SetTextureParameterValue(FName("ColorMap"), PaintTexture);
+	MeshMaterialInstance->SetTextureParameterValue(FName("TempColorMap"), TempPaintTexture);
 	SetMaterial(0, MeshMaterialInstance);
 }
 
@@ -74,7 +83,7 @@ void UPaintableSkeletalMeshComponent::GetLifetimeReplicatedProps(TArray<FLifetim
 
 }
 
-bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLinearColor& Color)
+bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary, float TempPaintLifetime)
 {
 	FVector2D UVPosition;
 	USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(Hit, UVPosition);
@@ -87,30 +96,19 @@ bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLi
 	{
 		BrushMaterialInstance->SetTextureParameterValue(FName("PaintTexture"), PaintHelper->GetPaintSplatTexture());
 	}
-	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
 
-	//OLD METHOD TO BE REMOVED
-	//UCanvas* Canvas;
-	//FVector2D CanvasSize;
-	//FDrawToRenderTargetContext Context;
-	//UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(this, PaintTexture, Canvas, CanvasSize, Context);
-	//
-	////TODO make this work for textures as well. Will probably need to include one in the constructor.
-	////probably refactor this to exist in its own function
-	//FVector2D TileItemPosition = CanvasSize * UVPosition;
-	//if (GetOwner()->GetLocalRole() == ROLE_Authority)
-	//{
-	//    float PaintCoverage = CalculatePaintCoverage(TileItemPosition);
-	//}
-	//
-	//FCanvasTileItem RectItem(
-	//    TileItemPosition,
-	//    FVector2D(42.62, 42.62), //size
-	//    Color
-	//);
-	//
-	//Canvas->DrawItem(RectItem);
-	//UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(this, Context);
+	if (!bIsTemporary)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Painting Perm"));
+		UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Painting Temp"));
+		UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), TempPaintTexture, BrushMaterialInstance);
+		//TODO erase added textue after X time.
+	}
+	
 	return true;
 }
 
