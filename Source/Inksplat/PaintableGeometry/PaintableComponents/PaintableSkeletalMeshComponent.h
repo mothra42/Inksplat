@@ -25,12 +25,11 @@ public:
 protected:
 	class UTextureRenderTarget2D* PaintTexture;
 
-	UTextureRenderTarget2D* TempPaintTexture;
-
 	class UMaterial* ParentMaterial;
 
 	UMaterial* BrushMaterial;
 
+	UPROPERTY(Category = "Materials", BlueprintReadWrite)
 	class UMaterialInstanceDynamic* MeshMaterialInstance;
 
 	UPROPERTY(Category = "Materials", VisibleAnywhere)

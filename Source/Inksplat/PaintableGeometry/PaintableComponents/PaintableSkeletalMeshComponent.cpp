@@ -51,14 +51,6 @@ void UPaintableSkeletalMeshComponent::BeginPlay()
 		ClearColor
 	);
 
-	TempPaintTexture = UKismetRenderingLibrary::CreateRenderTarget2D(
-		GetWorld(),
-		2048,
-		2048,
-		RTF_RGBA16f,
-		ClearColor
-	);
-
 	MeshMaterialInstance = UMaterialInstanceDynamic::Create(
 		ParentMaterial,
 		this
@@ -72,7 +64,6 @@ void UPaintableSkeletalMeshComponent::BeginPlay()
 	PaintHelper = Cast<APaintHelper>(UGameplayStatics::GetActorOfClass(GetWorld(), APaintHelper::StaticClass()));
 
 	MeshMaterialInstance->SetTextureParameterValue(FName("ColorMap"), PaintTexture);
-	MeshMaterialInstance->SetTextureParameterValue(FName("TempColorMap"), TempPaintTexture);
 	SetMaterial(0, MeshMaterialInstance);
 }
 
@@ -90,8 +81,8 @@ bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLi
 
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
 	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
-	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
 	BrushMaterialInstance->SetVectorParameterValue(FName("TintColor"), Color);
+	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
 	if (PaintHelper)
 	{
 		BrushMaterialInstance->SetTextureParameterValue(FName("PaintTexture"), PaintHelper->GetPaintSplatTexture());
@@ -99,14 +90,13 @@ bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLi
 
 	if (!bIsTemporary)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Painting Perm"));
 		UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Painting Temp"));
-		UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), TempPaintTexture, BrushMaterialInstance);
-		//TODO erase added textue after X time.
+		MeshMaterialInstance->SetScalarParameterValue(FName("TempPaintCoverage"), 1.0);
+		//TODO set the TempPaitCoverage to 1 and then bring it back to 0 over a set amount of time that should be controllable on BP
+		//Ideally this method is called on the server and the float that controls the parameter is replicated across all clients.
 	}
 	
 	return true;
@@ -126,8 +116,6 @@ void UPaintableSkeletalMeshComponent::CalculateUVStretchAndScale(const FHitResul
 	DrawDebugSphere(GetWorld(), (OrthogonalVectorTwo * 10.f) + Hit.Location, 3, 8, FColor::Green, false, 3.0f);
 	USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(ConstructOffsetHitResult(((OrthogonalVectorOne * 5.f) + Hit.Location), Hit.FaceIndex, Hit.BoneName), UVOffsetOne);
 	USkeletalMeshPaintingLibrary::FindCollisionUVFromHit(ConstructOffsetHitResult(((OrthogonalVectorTwo * 5.f) + Hit.Location), Hit.FaceIndex, Hit.BoneName), UVOffsetTwo);
-	//UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorOne * 3.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetOne);
-	//UGameplayStatics::FindCollisionUV(ConstructOffsetHitResult(((OrthogonalVectorTwo * 3.f) + Hit.Location), Hit.FaceIndex), 0, UVOffsetTwo);
 
 	OutScale = ((UVOffsetOne - UVPosition) + (UVOffsetTwo - UVPosition)).Size();
 
