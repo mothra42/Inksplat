@@ -69,6 +69,14 @@ protected:
 	UPROPERTY(Category = "Force Settings", EditDefaultsOnly)
 	float BaseForce = 30000000.0;
 
+	//Force scales with 1/Radius, so smaller numbers make a larger force
+	UPROPERTY(Category = "Force Settings", EditDefaultsOnly)
+	float MinRadiusCorrection = 200.f;
+
+	//Force scales with 1/Radius, so smaller numbers make a larger force
+	UPROPERTY(Category = "Force Settings", EditDefaultsOnly)
+	float MaxRadiusCorrection = 240.f;
+
 
 
 //Methods and variables inherited from interface

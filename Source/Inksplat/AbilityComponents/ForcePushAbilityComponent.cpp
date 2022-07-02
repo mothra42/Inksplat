@@ -44,8 +44,6 @@ void UForcePushAbilityComponent::TickComponent(float DeltaTime, ELevelTick TickT
 void UForcePushAbilityComponent::UseAbility()
 {
 	//if the ability is useable call server execute ability
-	UE_LOG(LogTemp, Warning, TEXT("Executing Ability"));
-	UE_LOG(LogTemp, Warning, TEXT("Owner is %s"), *GetOwner()->GetName());
 	if (bCanUseAbility)
 	{
 		ServerExecuteAbility();
@@ -56,8 +54,6 @@ void UForcePushAbilityComponent::UseAbility()
 void UForcePushAbilityComponent::ServerExecuteAbility_Implementation()
 {
 	bCanUseAbility = false;
-	UE_LOG(LogTemp, Warning, TEXT("Executing on server"));
-	//TODO do physics things to objects on server here.
 	TSet<APawn*> AffectedPawns = FindAffectedPawns();
 	ApplyImpulseToPawns(AffectedPawns);
 	////start cooldown
@@ -126,11 +122,8 @@ FVector UForcePushAbilityComponent::CalculateForceToApply(FVector PawnLocation)
 {
 	FVector ForceOrigin = GetOwner()->GetActorLocation();
 	float Radius = FVector::Distance(ForceOrigin, PawnLocation);
-	//TODO make clamp values customizeable in BP
-	float CorrectedRadius = FMath::Clamp(Radius, 200.f, 240.f);
+	float CorrectedRadius = FMath::Clamp(Radius, MinRadiusCorrection, MaxRadiusCorrection);
 	FVector ForceDirection = ((PawnLocation - ForceOrigin) + FVector(0, 0, 100)).GetSafeNormal();
-	DrawDebugLine(GetWorld(), ForceOrigin,
-		ForceOrigin + (ForceDirection * 500), FColor::Green, false, 5.0f);
 	return ForceDirection * (BaseForce / CorrectedRadius);
 }
 
@@ -152,12 +145,11 @@ void UForcePushAbilityComponent::ApplyTempPaintToHitPlayer_Implementation(APlaye
 		TraceParams
 	);
 
-	OtherPlayer->PaintActor(LineTraceHit, FColor::Red, false);
+	OtherPlayer->PaintActor(LineTraceHit, FColor::Red, true);
 }
 
 void UForcePushAbilityComponent::ResetAfterCoolDown()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Cooldown is over"));
 	bCanUseAbility = true;
 }
 
