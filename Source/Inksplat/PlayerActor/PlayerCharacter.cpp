@@ -78,22 +78,21 @@ void APlayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-
+	FColor PlayerPaintColor = FColor::MakeRandomColor();
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
 	if (PaintGunClass != nullptr && GetLocalRole() == ROLE_Authority)
 	{
 		PlayerPaintGun = GetWorld()->SpawnActor<APaintGun>(PaintGunClass);
 		PlayerPaintGun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 		PlayerPaintGun->SetOwningPlayer(this);
-		FColor PlayerPaintColor = FColor::MakeRandomColor();
-		PlayerPaintGun->SetPaintColor(FColor::MakeRandomColor());
-		UE_LOG(LogTemp, Warning, TEXT("Player Paint Color is %s"), *PlayerPaintColor.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Player Paint Color is %s"), *TeamPaintColor.ToString());
 	}
 
 	if (PrimaryAbilityComponentClass != nullptr && GetLocalRole() == ROLE_Authority)
 	{
 		PrimaryAbilityComponent = NewObject<UBaseAbilityComponent>(this, PrimaryAbilityComponentClass);
 		PrimaryAbilityComponent->RegisterComponent();
+		PrimaryAbilityComponent->SetTempPaintColor(PlayerPaintColor);
 	}
 
 	if (SecondaryAbilityComponentClass != nullptr && GetLocalRole() == ROLE_Authority)
@@ -143,6 +142,8 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, PlayerPaintGun);
 	DOREPLIFETIME(APlayerCharacter, PrimaryAbilityComponent);
 	DOREPLIFETIME(APlayerCharacter, SecondaryAbilityComponent);
+	DOREPLIFETIME(APlayerCharacter, TeamPaintColor);
+	DOREPLIFETIME(APlayerCharacter, TeamTempPaintColor);
 }
 
 void APlayerCharacter::OnFire()
@@ -229,6 +230,14 @@ void APlayerCharacter::OnHealthUpdate(float PercentagePainted)
 void APlayerCharacter::OnRep_PlayerPaintGun()
 {
 	PlayerPaintGun->SetOwningPlayer(this);
+}
+
+void APlayerCharacter::OnRep_TeamPaintColor()
+{
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("TeamPaintColor is %s in client"), *TeamPaintColor.ToString());
+	}
 }
 
 void APlayerCharacter::EndPlay()

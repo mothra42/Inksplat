@@ -40,7 +40,6 @@ void APaintGun::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(APaintGun, PlayerOwner);
-	DOREPLIFETIME(APaintGun, PaintColor);
 }
 
 // Called every frame
@@ -64,24 +63,6 @@ void APaintGun::SetOwningPlayer(APlayerCharacter* NewPlayerOwner)
 void APaintGun::OnRep_PlayerOwner()
 {
 	SetOwningPlayer(PlayerOwner);
-}
-
-//Methods related to painting properties
-void APaintGun::SetPaintColor(FColor ColorToSet)
-{
-	UE_LOG(LogTemp, Warning, TEXT("PaintColor is %s in gun"), *ColorToSet.ToString());
-	//if (PlayerOwner->GetLocalRole() == ROLE_Authority)
-	//{
-		PaintColor = ColorToSet;
-	//}
-}
-
-void APaintGun::OnRep_PaintColor()
-{
-	//if (PlayerOwner->GetLocalRole() < ROLE_Authority)
-	//{
-		SetPaintColor(PaintColor);
-	//}
 }
 
 //Methods related to firing weapon
@@ -164,12 +145,12 @@ void APaintGun::Server_SpawnProjectile()
 			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 			//const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 			FActorSpawnParameters SpawnParameters;
-			SpawnParameters.Instigator = PlayerOwner;//GetInstigator();
+			SpawnParameters.Instigator = PlayerOwner;
 			SpawnParameters.Owner = PlayerOwner;
 
 			// spawn the projectile at the muzzle
 			AInksplatProjectile* Projectile = World->SpawnActor<AInksplatProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
-			Projectile->SetProjectilePaintColor(PaintColor);
+			Projectile->SetOwningPlayer(PlayerOwner);
 		}
 	}
 }

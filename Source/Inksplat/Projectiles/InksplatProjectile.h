@@ -27,11 +27,11 @@ protected:
 	UPROPERTY(ReplicatedUsing=OnRep_MeshHit)
 	FVector HitLocation;
 
-	UPROPERTY(ReplicatedUsing = OnRep_HitResultChanged)
+	UPROPERTY(Replicated)
 	FHitResult HitResult;
 
-	UPROPERTY(ReplicatedUsing = OnRep_PaintColor)
-	FColor PaintColor;
+	UPROPERTY(Replicated)
+	class APlayerCharacter* OwningPlayer;
 
 protected:
 	virtual void BeginPlay() override;
@@ -49,12 +49,6 @@ protected:
 	UFUNCTION()
 	void OnRep_MeshHit();
 
-	UFUNCTION()
-	void OnRep_HitResultChanged();
-
-	UFUNCTION()
-	void OnRep_PaintColor();
-
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void Destroyed() override;
@@ -69,6 +63,6 @@ public:
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
-	void SetProjectilePaintColor(FColor ColorToSet) { PaintColor = ColorToSet; }
+	void SetOwningPlayer(APlayerCharacter* OwnerToSet) { OwningPlayer = OwnerToSet; }
 };
 

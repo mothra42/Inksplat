@@ -64,13 +64,50 @@ void UPaintableSkeletalMeshComponent::BeginPlay()
 	PaintHelper = Cast<APaintHelper>(UGameplayStatics::GetActorOfClass(GetWorld(), APaintHelper::StaticClass()));
 
 	MeshMaterialInstance->SetTextureParameterValue(FName("ColorMap"), PaintTexture);
+	MeshMaterialInstance->SetVectorParameterValue(FName("TempPaintColor"), FLinearColor(0, 0, 1, 1));
 	SetMaterial(0, MeshMaterialInstance);
+}
+
+void UPaintableSkeletalMeshComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	UpdateTempPaintCoverageFactor();
+}
+
+void UPaintableSkeletalMeshComponent::UpdateTempPaintCoverageFactor()
+{
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		switch (TempPaintApplicationType)
+		{
+		case ETempPaintApplicationType::Add:
+			TempPaintCoverageFactor += TempPaintCoverageTickAddition;
+			if (TempPaintCoverageFactor >= 1.0)
+			{
+				TempPaintApplicationType = ETempPaintApplicationType::Remove;
+			}
+			break;
+		case ETempPaintApplicationType::Remove:
+			TempPaintCoverageFactor -= TempPaintCoverageTickSubtraction;
+			if (TempPaintCoverageFactor <= 0.0)
+			{
+				TempPaintApplicationType = ETempPaintApplicationType::Static;
+			}
+			break;
+		case ETempPaintApplicationType::Static:
+		default:
+			break;
+		}
+	}
 }
 
 void UPaintableSkeletalMeshComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UPaintableSkeletalMeshComponent, NumPaintedTiles);
+	DOREPLIFETIME(UPaintableSkeletalMeshComponent, TempPaintCoverageFactor);
+	DOREPLIFETIME(UPaintableSkeletalMeshComponent, TempPaintColor);
 
 }
 
@@ -87,16 +124,18 @@ bool UPaintableSkeletalMeshComponent::PaintMesh(const FHitResult& Hit, const FLi
 	{
 		BrushMaterialInstance->SetTextureParameterValue(FName("PaintTexture"), PaintHelper->GetPaintSplatTexture());
 	}
-
+	
 	if (!bIsTemporary)
 	{
 		UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
 	}
 	else
 	{
-		MeshMaterialInstance->SetScalarParameterValue(FName("TempPaintCoverage"), 1.0);
-		//TODO set the TempPaitCoverage to 1 and then bring it back to 0 over a set amount of time that should be controllable on BP
-		//Ideally this method is called on the server and the float that controls the parameter is replicated across all clients.
+		if (GetOwner()->GetLocalRole() == ROLE_Authority)
+		{
+			TempPaintColor = Color.ToFColor(true);
+			TempPaintApplicationType = ETempPaintApplicationType::Add;
+		}
 	}
 	
 	return true;
@@ -168,14 +207,27 @@ void UPaintableSkeletalMeshComponent::UpdateParentHealth()
 	if (PlayerOwner)
 	{
 		float test = float(NumPaintedTiles) / float(MaxPaintedTiles);
-		UE_LOG(LogTemp, Warning, TEXT("Percentage from mesh is %f"), test);
 		PlayerOwner->OnHealthUpdate(float(NumPaintedTiles) / MaxPaintedTiles);
 	}
 }
 
 void UPaintableSkeletalMeshComponent::OnRep_NumPaintedTiles()
 {
-	UE_LOG(LogTemp, Warning, TEXT("NumPaintedTiles is %i"), NumPaintedTiles);
-	UE_LOG(LogTemp, Warning, TEXT("MaxPaintedTiles is %i"), MaxPaintedTiles);
 	UpdateParentHealth();
+}
+
+void UPaintableSkeletalMeshComponent::OnRep_TempPaintCoverageFactor()
+{
+	if (GetOwner()->GetLocalRole() != ROLE_Authority)
+	{
+		MeshMaterialInstance->SetScalarParameterValue(FName("TempPaintCoverage"), TempPaintCoverageFactor);
+	}
+}
+
+void UPaintableSkeletalMeshComponent::OnRep_TempPaintColor()
+{
+	if (GetOwner()->GetLocalRole() != ROLE_Authority)
+	{
+		MeshMaterialInstance->SetVectorParameterValue(FName("TempPaintColor"), TempPaintColor);
+	}
 }

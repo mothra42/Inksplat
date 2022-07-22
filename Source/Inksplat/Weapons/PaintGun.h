@@ -46,18 +46,6 @@ public:
 	UFUNCTION()
 	void OnRep_PlayerOwner();
 
-//Weapon Paint Properties and Methods
-private:
-	UPROPERTY(ReplicatedUsing = OnRep_PaintColor)
-	FColor PaintColor;
-
-protected:
-	UFUNCTION()
-	void OnRep_PaintColor();
-
-public:
-	void SetPaintColor(FColor ColorToSet);
-
 //Weapon Firing methods and timer handles
 protected:
 	/** Projectile class to spawn */

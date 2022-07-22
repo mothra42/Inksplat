@@ -6,6 +6,14 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "PaintableSkeletalMeshComponent.generated.h"
 
+UENUM()
+enum class ETempPaintApplicationType : uint8
+{
+	Add,
+	Remove,
+	Static
+};
+
 /**
  * 
  */
@@ -29,7 +37,7 @@ protected:
 
 	UMaterial* BrushMaterial;
 
-	UPROPERTY(Category = "Materials", BlueprintReadWrite)
+	UPROPERTY(Category = "Materials", BlueprintReadWrite, VisibleAnywhere)
 	class UMaterialInstanceDynamic* MeshMaterialInstance;
 
 	UPROPERTY(Category = "Materials", VisibleAnywhere)
@@ -50,14 +58,38 @@ private:
 	int32 NumPaintedTiles = 0;
 
 	int32 MaxPaintedTiles = 100;
+
+	ETempPaintApplicationType TempPaintApplicationType = ETempPaintApplicationType::Static;
+
+	UPROPERTY(ReplicatedUsing=OnRep_TempPaintCoverageFactor)
+	float TempPaintCoverageFactor = 0.0;
+
+	UPROPERTY(ReplicatedUsing = OnRep_TempPaintColor)
+	FColor TempPaintColor;
+
+	//TODO make a better name
+	UPROPERTY(Category = "Temporary Paint", EditDefaultsOnly)
+	float TempPaintCoverageTickAddition = 0.01;
+
+	UPROPERTY(Category = "Temporary Paint", EditDefaultsOnly)
+	float TempPaintCoverageTickSubtraction = 0.001;
+
 protected:
 	UFUNCTION()
 	void OnRep_NumPaintedTiles();
+
+	UFUNCTION()
+	void OnRep_TempPaintCoverageFactor();
+
+	UFUNCTION()
+	void OnRep_TempPaintColor();
 
 	void UpdateParentHealth();
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -68,7 +100,7 @@ private:
 
 	float CalculatePaintCoverage(FVector2D Origin);
 
-	void RemoveTemporaryPaint();
+	void UpdateTempPaintCoverageFactor();
 
 public:
 	void SetMaxPaintedTiles(int32 MaxTilesToSet) { MaxPaintedTiles = MaxTilesToSet; }

@@ -28,5 +28,7 @@ public:
 
 	virtual void UseAbility() { return; }
 
+	virtual void SetTempPaintColor(const FColor ColorToSet) { return; }
+
 		
 };

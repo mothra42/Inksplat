@@ -127,7 +127,7 @@ FVector UForcePushAbilityComponent::CalculateForceToApply(FVector PawnLocation)
 	return ForceDirection * (BaseForce / CorrectedRadius);
 }
 
-void UForcePushAbilityComponent::ApplyTempPaintToHitPlayer_Implementation(APlayerCharacter* OtherPlayer)
+void UForcePushAbilityComponent::ApplyTempPaintToHitPlayer(APlayerCharacter* OtherPlayer)
 {
 	FVector TraceBeginLocation = GetOwner()->GetActorLocation();
 	FVector TraceEndLocation = OtherPlayer->GetActorLocation();
@@ -144,8 +144,10 @@ void UForcePushAbilityComponent::ApplyTempPaintToHitPlayer_Implementation(APlaye
 		ECC_Visibility,
 		TraceParams
 	);
+	FColor TempPaintColor = Cast<APlayerCharacter>(GetOwner())->GetTempPaintColor();
 
-	OtherPlayer->PaintActor(LineTraceHit, FColor::Red, true);
+	//TODO make sure this is set to the correct color in clients
+	OtherPlayer->PaintActor(LineTraceHit, TempPaintColor, true);
 }
 
 void UForcePushAbilityComponent::ResetAfterCoolDown()
@@ -157,20 +159,3 @@ void UForcePushAbilityComponent::OnRep_CanUseAbility()
 {
 	//TODO update UI from this method.
 }
-
-// Force push should work as a simple call to execute a method on the server, much like firing a gun.
-
-//Force push therefore needs an execution method that makes force push happen on server
-	//this will need to be a server RPC call
-
-//Force push also needs a cooldown timer that can be adjusted from blueprint for balancing.
-	//similar to weapon firing methods
-
-//force push needs several variables to tweak for flexibility
-	//The amount of force to apply
-	//Valid objects that can be pushed
-	//room for animation and VFX
-	//A Mesh that looks for objects that need to have force applied to them.
-
-//It would be best if all abilities inherited from a basic ability interface that mandates
-//a cool down and an execution method. Thos are the two things every ability should have.

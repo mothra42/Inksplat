@@ -37,8 +37,11 @@ private:
 
 	FVector CalculateForceToApply(FVector PawnLocation);
 
-	UFUNCTION(NetMulticast, Reliable)
 	void ApplyTempPaintToHitPlayer(class APlayerCharacter* OtherPlayer);
+
+	//TODO make the color initialization work
+	
+	//void InitializeTempColor(const FColor ColorToSet);
 
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CanUseAbility)
@@ -76,8 +79,6 @@ protected:
 	//Force scales with 1/Radius, so smaller numbers make a larger force
 	UPROPERTY(Category = "Force Settings", EditDefaultsOnly)
 	float MaxRadiusCorrection = 240.f;
-
-
 
 //Methods and variables inherited from interface
 protected:

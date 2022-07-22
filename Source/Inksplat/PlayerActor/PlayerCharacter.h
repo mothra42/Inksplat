@@ -64,6 +64,14 @@ class APlayerCharacter : public ACharacter, public IPaintableObjectInterface
 	//Paint Material
 	UMaterial* PaintableMaterialParent;
 
+	FName TeamName = "";
+
+	UPROPERTY(ReplicatedUsing = OnRep_TeamPaintColor)
+	FColor TeamPaintColor = FColor(1, 0, 0);
+
+	UPROPERTY(Replicated, VisibleAnywhere)
+	FColor TeamTempPaintColor = FColor(0, 1, 0);
+
 public:
 	APlayerCharacter();
 
@@ -95,6 +103,13 @@ public:
 protected:
 	UFUNCTION()
 	void OnRep_PlayerPaintGun();
+
+	UFUNCTION()
+	void OnRep_TeamPaintColor();
+
+	//UFUNCTION()
+	//void OnRep_TeamTempPaintColor();
+
 
 //Methods related to firing
 protected:
@@ -156,6 +171,16 @@ public:
 
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+	FName GetTeamName() const { return TeamName; }
+	void SetTeamName(const FName TeamNameToSet) { TeamName = TeamNameToSet; }
+
+	//Getter and Setter methods for paint color
+	FColor GetPaintColor() const { return TeamPaintColor; }
+	FColor GetTempPaintColor() const { return TeamTempPaintColor; }
+	
+	void SetTeamPaintColor(const FColor ColorToSet) { TeamPaintColor = ColorToSet; }
+	void SetTeamTempPaintColor(const FColor ColorToSet) { TeamTempPaintColor = ColorToSet; }
 
 };
 

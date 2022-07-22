@@ -66,14 +66,14 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 {
 	FVector2D UVPosition;
 	UGameplayStatics::FindCollisionUV(Hit, UVChannelToPaint, UVPosition);
-	UE_LOG(LogTemp, Warning, TEXT("UV Collision at %s"), *UVPosition.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("UV Collision at %s"), *UVPosition.ToString());
 	FVector MaterialStretch;
 	float MaterialScale;
 	
 	CalculateUVStretchAndScale(Hit, UVPosition, MaterialScale, MaterialStretch);
-	UE_LOG(LogTemp, Warning, TEXT("UV Collision at %s"), *UVPosition.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Material Scale, %f"), MaterialScale);
-	UE_LOG(LogTemp, Warning, TEXT("Material Stretch, %s"), *MaterialStretch.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("UV Collision at %s"), *UVPosition.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("Material Scale, %f"), MaterialScale);
+	//UE_LOG(LogTemp, Warning, TEXT("Material Stretch, %s"), *MaterialStretch.ToString());
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
 	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
 	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
