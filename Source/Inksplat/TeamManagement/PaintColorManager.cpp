@@ -21,33 +21,14 @@ APaintColorManager::APaintColorManager()
 void APaintColorManager::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		TArray<AActor*> Players;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacter::StaticClass(), Players);
-		UE_LOG(LogTemp, Warning, TEXT("Num of players found in manager is %i"), Players.Num());
-		//AssignTeamColors(Players);
-	}
 }
 
+
+//Currently called from the BP version of this class on a delay.
+//Ideally this method is called after all players are loaded in and before an actual match begins.
+//TODO add a hook for this method as a sort of BeginMatch()
 void APaintColorManager::AssignTeamColors(const TArray<AActor*>& Players)
 {
-	////UGameplayStatics::GetActorsOfClass(GetWorld(), APlayerCharacter::StaticClass());
-	//TArray<AActor*> Players;
-	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacter::StaticClass(), Players);
-	//
-	//for (AActor* Player : Players)
-	//{
-	//	if (Player->GetLocalRole() == ROLE_Authority)
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Color Manager found %s in server"), *Player->GetName());
-	//	}
-	//	else
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Color Manager found %s in client"), *Player->GetName());
-	//	}
-	//}
 	for (AActor* Player : Players)
 	{
 		APlayerCharacter* CurrentPlayer = Cast<APlayerCharacter>(Player);
@@ -65,13 +46,5 @@ void APaintColorManager::AssignTeamColors(const TArray<AActor*>& Players)
 			UE_LOG(LogTemp, Warning, TEXT("Color is %s in client"), *TeamOneColor.ToString());
 		}
 	}
-	//if (GetLocalRole() == ROLE_Authority)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Called in server"));
-	//}
-	//else
-	//{
-	//	//If called in client, assign a color and temp color according to team name
-	//}
 }
 
