@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class INKSPLAT_API UTerrainScanComponent : public UBaseAbilityComponent
 {
 	GENERATED_BODY()
@@ -26,6 +26,9 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ExecuteAbility_BPTest();
+private:
+	UFUNCTION(Server, Reliable)
+	void ServerExecuteAbility();
 
 public:
 	virtual void UseAbility() override;

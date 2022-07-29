@@ -47,13 +47,13 @@ void APaintableActorBase::PaintActor(const FHitResult& Hit, const FLinearColor& 
 void APaintableActorBase::ScanActor(const float ScanSpeed)
 {
 	TArray<UActorComponent*> PaintableMeshes = GetComponentsByClass(UPaintableStaticMeshComponent::StaticClass());
-
+	UE_LOG(LogTemp, Warning, TEXT("Scanning Actor"));
 	for (UActorComponent* Mesh : PaintableMeshes)
 	{
 		UPaintableStaticMeshComponent* PaintableMesh = Cast<UPaintableStaticMeshComponent>(Mesh);
 		if (PaintableMesh != nullptr)
 		{
-			//Call a function that sets Speed variable to scan speed
+			PaintableMesh->ScanMesh(ScanSpeed);
 		}
 	}
 }
