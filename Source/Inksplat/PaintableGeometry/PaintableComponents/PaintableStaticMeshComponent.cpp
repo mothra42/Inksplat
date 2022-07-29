@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Canvas.h"
 #include "Containers/Queue.h"
@@ -31,6 +32,15 @@ UPaintableStaticMeshComponent::UPaintableStaticMeshComponent()
 	{
 		BrushMaterial = BrushMaterialFinder.Object;
 	}
+
+	SetIsReplicated(true);
+}
+
+void UPaintableStaticMeshComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UPaintableStaticMeshComponent, ScanSpeed);
 }
 
 void UPaintableStaticMeshComponent::BeginPlay()
@@ -66,14 +76,10 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 {
 	FVector2D UVPosition;
 	UGameplayStatics::FindCollisionUV(Hit, UVChannelToPaint, UVPosition);
-	//UE_LOG(LogTemp, Warning, TEXT("UV Collision at %s"), *UVPosition.ToString());
 	FVector MaterialStretch;
 	float MaterialScale;
 	
 	CalculateUVStretchAndScale(Hit, UVPosition, MaterialScale, MaterialStretch);
-	//UE_LOG(LogTemp, Warning, TEXT("UV Collision at %s"), *UVPosition.ToString());
-	//UE_LOG(LogTemp, Warning, TEXT("Material Scale, %f"), MaterialScale);
-	//UE_LOG(LogTemp, Warning, TEXT("Material Stretch, %s"), *MaterialStretch.ToString());
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
 	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
 	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
@@ -139,4 +145,50 @@ FVector UPaintableStaticMeshComponent::CalculatePaintScale(FVector Normal)
 		//xy plane
 		return FVector(MeshScale.X, MeshScale.Y, 0);
 	}
+}
+
+void UPaintableStaticMeshComponent::ScanMesh(float ScanSpeedToSet)
+{
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		ScanSpeed = ScanSpeedToSet;
+		
+	}
+}
+
+void UPaintableStaticMeshComponent::OnRep_UpdateSpeedParam()
+{
+	if (GetOwner()->GetLocalRole() != ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Replicating ScanSpeed in On Rep"));
+		UE_LOG(LogTemp, Warning, TEXT("ScanSpeed is %f"), ScanSpeed);
+		MeshMaterialInstance->SetScalarParameterValue(FName("ScanSpeed"), ScanSpeed);
+		GetWorld()->GetTimerManager().SetTimer(
+			TimerHandle_ScanTime,
+			this,
+			&UPaintableStaticMeshComponent::ProgressScan,
+			ScanTime,
+			true
+		);
+	}
+}
+
+void UPaintableStaticMeshComponent::StopScan()
+{
+	ScanSpeed = 0.0f;
+}
+
+void UPaintableStaticMeshComponent::ProgressScan()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Progressing Scan"));
+	CurrentRange = FMath::Clamp(CurrentRange + 0.1f, 0.f, MaxRange);
+	
+	if (CurrentRange >= MaxRange)
+	{
+		//reset range
+		CurrentRange = 0.f;
+		//clear timer
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_ScanTime);
+	}
+	MeshMaterialInstance->SetScalarParameterValue(FName("ScanProgression"), CurrentRange);
 }

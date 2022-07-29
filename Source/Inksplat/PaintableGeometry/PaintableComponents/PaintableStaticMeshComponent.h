@@ -21,6 +21,8 @@ public:
 	//returns true if successfuly draws to mesh
 	bool PaintMesh(const FHitResult& Hit, const FLinearColor& Color);
 
+	void ScanMesh(float ScanSpeedToSet);
+
 protected:
 	
 	UPROPERTY(VisibleAnywhere)
@@ -29,16 +31,34 @@ protected:
 	class UMaterial* ParentMaterial;
 
 	UMaterial* BrushMaterial;
-
+	
+	UPROPERTY(Category = "Materials", VisibleAnywhere)
 	class UMaterialInstanceDynamic* MeshMaterialInstance;
 
 	UPROPERTY(Category = "Materials", VisibleAnywhere)
 	UMaterialInstanceDynamic* BrushMaterialInstance;
 
+	UPROPERTY(ReplicatedUsing = OnRep_UpdateSpeedParam)
+	float ScanSpeed = 0.0f;
+
+	UPROPERTY(Category = "MaterialScan", EditDefaultsOnly)
+	float MaxRange = 10.f;
+
+	float CurrentRange = 0.f;
+
 	class APaintHelper* PaintHelper;
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION()
+	void OnRep_UpdateSpeedParam();
+
+	void StopScan();
+
+	void ProgressScan();
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Shot Size")
@@ -48,6 +68,11 @@ private:
 	int32 UVChannelToPaint = 0;
 
 	FVector CalculatePaintScale(FVector Normal);
+
+	FTimerHandle TimerHandle_ScanTime;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Object Scan")
+	float ScanTime = 0.1f;
 
 private:
 	void CalculateUVStretchAndScale(const FHitResult& Hit, const FVector2D& UVPosition, float& OutScale, FVector& OutStretch);
