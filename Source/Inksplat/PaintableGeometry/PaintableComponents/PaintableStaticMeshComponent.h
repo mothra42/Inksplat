@@ -41,8 +41,7 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_UpdateSpeedParam)
 	float ScanSpeed = 0.0f;
 
-	UPROPERTY(Category = "MaterialScan", EditDefaultsOnly)
-	float MaxRange = 10.f;
+	float MaxRange = 3.0f;
 
 	float CurrentRange = 0.f;
 
@@ -72,7 +71,7 @@ private:
 	FTimerHandle TimerHandle_ScanTime;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Object Scan")
-	float ScanTime = 0.1f;
+	float ScanTime = 0.01f;
 
 private:
 	void CalculateUVStretchAndScale(const FHitResult& Hit, const FVector2D& UVPosition, float& OutScale, FVector& OutStretch);

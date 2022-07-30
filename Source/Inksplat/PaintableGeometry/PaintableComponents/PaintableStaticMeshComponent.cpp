@@ -152,7 +152,6 @@ void UPaintableStaticMeshComponent::ScanMesh(float ScanSpeedToSet)
 	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
 		ScanSpeed = ScanSpeedToSet;
-		
 	}
 }
 
@@ -180,9 +179,8 @@ void UPaintableStaticMeshComponent::StopScan()
 
 void UPaintableStaticMeshComponent::ProgressScan()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Progressing Scan"));
-	CurrentRange = FMath::Clamp(CurrentRange + 0.1f, 0.f, MaxRange);
-	
+	CurrentRange = FMath::Clamp(CurrentRange + 0.01f, 0.f, MaxRange);
+	UE_LOG(LogTemp, Warning, TEXT("Progressing Scan and range is %f"), CurrentRange);
 	if (CurrentRange >= MaxRange)
 	{
 		//reset range
