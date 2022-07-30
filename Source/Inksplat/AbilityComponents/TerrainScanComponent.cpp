@@ -20,11 +20,6 @@ void UTerrainScanComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
-void UTerrainScanComponent::UseAbility()
-{
-	ServerExecuteAbility();
-}
-
 void UTerrainScanComponent::ServerExecuteAbility_Implementation()
 {
 	TArray<APaintableActorBase*> CurrentlyRenderedActors;
@@ -41,12 +36,7 @@ void UTerrainScanComponent::ServerExecuteAbility_Implementation()
 				Itr->ScanActor(-0.3f);
 			}
 		}
-
+	
 		UE_LOG(LogTemp, Warning, TEXT("Rendering %i actors in view"), CurrentlyRenderedActors.Num());
 	}
-}
-
-void UTerrainScanComponent::ResetAfterCoolDown()
-{
-
 }

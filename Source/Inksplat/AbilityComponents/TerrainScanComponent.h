@@ -20,16 +20,8 @@ public:
 protected:
 	virtual void BeginPlay();
 
-	//Methods and variables inherited from interface
-protected:
-	virtual void ResetAfterCoolDown() override;
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void ExecuteAbility_BPTest();
 private:
-	UFUNCTION(Server, Reliable)
-	void ServerExecuteAbility();
+	virtual void ServerExecuteAbility_Implementation() override;
 
 public:
-	virtual void UseAbility() override;
 };

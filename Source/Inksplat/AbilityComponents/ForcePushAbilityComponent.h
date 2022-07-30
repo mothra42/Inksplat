@@ -28,8 +28,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-	UFUNCTION(Server, Reliable)
-	void ServerExecuteAbility();
+	virtual void ServerExecuteAbility_Implementation() override;
 
 	TSet<APawn*> FindAffectedPawns();
 
@@ -44,16 +43,8 @@ private:
 	//void InitializeTempColor(const FColor ColorToSet);
 
 protected:
-	UPROPERTY(ReplicatedUsing = OnRep_CanUseAbility)
-	bool bCanUseAbility = true;
+	virtual void OnRep_CanUseAbility() override;
 
-	UPROPERTY(Category = "Cool Down Settings", EditDefaultsOnly)
-	float CoolDownTime = 0.5;
-
-	FTimerHandle TimerHandle_AbilityCooldown;
-
-	UFUNCTION()
-	void OnRep_CanUseAbility();
 protected:
 	//sweep properties
 	UPROPERTY(Category = "Box Trace Settings", EditDefaultsOnly)
@@ -79,12 +70,4 @@ protected:
 	//Force scales with 1/Radius, so smaller numbers make a larger force
 	UPROPERTY(Category = "Force Settings", EditDefaultsOnly)
 	float MaxRadiusCorrection = 240.f;
-
-//Methods and variables inherited from interface
-protected:
-	virtual void ResetAfterCoolDown() override;
-
-public:
-	virtual void UseAbility() override;
-	
 };

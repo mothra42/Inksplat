@@ -14,7 +14,7 @@ UForcePushAbilityComponent::UForcePushAbilityComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicated(true);
 }
 
@@ -41,31 +41,11 @@ void UForcePushAbilityComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	// ...
 }
 
-void UForcePushAbilityComponent::UseAbility()
-{
-	//if the ability is useable call server execute ability
-	if (bCanUseAbility)
-	{
-		ServerExecuteAbility();
-	}
-	return;
-}
-
 void UForcePushAbilityComponent::ServerExecuteAbility_Implementation()
 {
-	bCanUseAbility = false;
+	BeginCoolDown();
 	TSet<APawn*> AffectedPawns = FindAffectedPawns();
 	ApplyImpulseToPawns(AffectedPawns);
-	////start cooldown
-
-	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle_AbilityCooldown,
-		this,
-		&UForcePushAbilityComponent::ResetAfterCoolDown,
-		CoolDownTime,
-		false
-	);
-
 }
 
 TSet<APawn*> UForcePushAbilityComponent::FindAffectedPawns()
@@ -150,12 +130,8 @@ void UForcePushAbilityComponent::ApplyTempPaintToHitPlayer(APlayerCharacter* Oth
 	OtherPlayer->PaintActor(LineTraceHit, TempPaintColor, true);
 }
 
-void UForcePushAbilityComponent::ResetAfterCoolDown()
-{
-	bCanUseAbility = true;
-}
-
 void UForcePushAbilityComponent::OnRep_CanUseAbility()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Using force push on rep"));
 	//TODO update UI from this method.
 }
