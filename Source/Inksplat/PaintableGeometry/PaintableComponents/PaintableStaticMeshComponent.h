@@ -21,13 +21,14 @@ public:
 	//returns true if successfuly draws to mesh
 	bool PaintMesh(const FHitResult& Hit, const FLinearColor& Color);
 
-	void ScanMesh(float ScanSpeedToSet);
+	void ScanMesh(const float ScanSpeedToSet, const float RangeToSet);
 
 protected:
 	
 	UPROPERTY(VisibleAnywhere)
 	class UTextureRenderTarget2D* PaintTexture;
 
+	UPROPERTY(Category="Base Mesh Material", EditAnywhere)
 	class UMaterial* ParentMaterial;
 
 	UMaterial* BrushMaterial;
@@ -38,7 +39,7 @@ protected:
 	UPROPERTY(Category = "Materials", VisibleAnywhere)
 	UMaterialInstanceDynamic* BrushMaterialInstance;
 
-	UPROPERTY(ReplicatedUsing = OnRep_UpdateSpeedParam)
+	//UPROPERTY(ReplicatedUsing = OnRep_UpdateSpeedParam)
 	float ScanSpeed = 0.0f;
 
 	float MaxRange = 3.0f;
@@ -51,9 +52,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	UFUNCTION()
-	void OnRep_UpdateSpeedParam();
 
 	void StopScan();
 

@@ -16,18 +16,18 @@
 
 UPaintableStaticMeshComponent::UPaintableStaticMeshComponent()
 {
-	static ConstructorHelpers::FObjectFinder<UMaterial> PaintableMaterialFinder(
-		TEXT("/Game/PaintableMaterials/M_PaintableMaterial")
-	);
+	//static ConstructorHelpers::FObjectFinder<UMaterial> PaintableMaterialFinder(
+	//	TEXT("/Game/PaintableMaterials/M_PaintableMaterial_TransparencyTest")
+	//);
 
 	static ConstructorHelpers::FObjectFinder<UMaterial> BrushMaterialFinder(
 		TEXT("/Game/PaintableMaterials/M_Brush")
 	);
 
-	if (PaintableMaterialFinder.Succeeded())
-	{
-		ParentMaterial = PaintableMaterialFinder.Object;
-	}
+	//if (PaintableMaterialFinder.Succeeded())
+	//{
+	//	ParentMaterial = PaintableMaterialFinder.Object;
+	//}
 	if (BrushMaterialFinder.Succeeded())
 	{
 		BrushMaterial = BrushMaterialFinder.Object;
@@ -39,8 +39,6 @@ UPaintableStaticMeshComponent::UPaintableStaticMeshComponent()
 void UPaintableStaticMeshComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(UPaintableStaticMeshComponent, ScanSpeed);
 }
 
 void UPaintableStaticMeshComponent::BeginPlay()
@@ -147,30 +145,42 @@ FVector UPaintableStaticMeshComponent::CalculatePaintScale(FVector Normal)
 	}
 }
 
-void UPaintableStaticMeshComponent::ScanMesh(float ScanSpeedToSet)
+void UPaintableStaticMeshComponent::ScanMesh(const float ScanSpeedToSet, const float RangeToSet)
 {
-	if (GetOwner()->GetLocalRole() == ROLE_Authority)
-	{
-		ScanSpeed = ScanSpeedToSet;
-	}
+	//if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	//{
+	//	ScanSpeed = ScanSpeedToSet;
+	//}
+
+	ScanSpeed = ScanSpeedToSet;
+	MaxRange = RangeToSet;
+
+	MeshMaterialInstance->SetScalarParameterValue(FName("ScanSpeed"), ScanSpeed);
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle_ScanTime,
+		this,
+		&UPaintableStaticMeshComponent::ProgressScan,
+		ScanTime,
+		true
+	);
 }
 
-void UPaintableStaticMeshComponent::OnRep_UpdateSpeedParam()
-{
-	if (GetOwner()->GetLocalRole() != ROLE_Authority)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Replicating ScanSpeed in On Rep"));
-		UE_LOG(LogTemp, Warning, TEXT("ScanSpeed is %f"), ScanSpeed);
-		MeshMaterialInstance->SetScalarParameterValue(FName("ScanSpeed"), ScanSpeed);
-		GetWorld()->GetTimerManager().SetTimer(
-			TimerHandle_ScanTime,
-			this,
-			&UPaintableStaticMeshComponent::ProgressScan,
-			ScanTime,
-			true
-		);
-	}
-}
+//void UPaintableStaticMeshComponent::OnRep_UpdateSpeedParam()
+//{
+//	if (GetOwner()->GetLocalRole() != ROLE_Authority)
+//	{
+//		UE_LOG(LogTemp, Warning, TEXT("Replicating ScanSpeed in On Rep"));
+//		UE_LOG(LogTemp, Warning, TEXT("ScanSpeed is %f"), ScanSpeed);
+//		MeshMaterialInstance->SetScalarParameterValue(FName("ScanSpeed"), ScanSpeed);
+//		GetWorld()->GetTimerManager().SetTimer(
+//			TimerHandle_ScanTime,
+//			this,
+//			&UPaintableStaticMeshComponent::ProgressScan,
+//			ScanTime,
+//			true
+//		);
+//	}
+//}
 
 void UPaintableStaticMeshComponent::StopScan()
 {

@@ -22,21 +22,34 @@ void UTerrainScanComponent::BeginPlay()
 
 void UTerrainScanComponent::ServerExecuteAbility_Implementation()
 {
-	TArray<APaintableActorBase*> CurrentlyRenderedActors;
+	TArray<APaintableActorBase*> ActorsWithinRange = GetPaintableActorsWithinRadius();
+
+	ScanActors(ActorsWithinRange);
+}
+
+TArray<APaintableActorBase*> UTerrainScanComponent::GetPaintableActorsWithinRadius()
+{
+	TArray<APaintableActorBase*> ActorsWithinRange{};
 	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Running in server"));
-		//Iterate Over Actors
 		for (TObjectIterator<APaintableActorBase> Itr; Itr; ++Itr)
 		{
 			if (Itr->GetLastRenderTime() < 0.01)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Actor In Server is %s"), *Itr->GetName());
-				CurrentlyRenderedActors.Add(*Itr);
-				Itr->ScanActor(-0.3f);
+				ActorsWithinRange.Add(*Itr);
 			}
 		}
-	
-		UE_LOG(LogTemp, Warning, TEXT("Rendering %i actors in view"), CurrentlyRenderedActors.Num());
+	}
+
+	return ActorsWithinRange;
+}
+
+
+void UTerrainScanComponent::ScanActors_Implementation(const TArray<APaintableActorBase*>& ActorsToScan)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Num actors are %i"), ActorsToScan.Num());
+	for (APaintableActorBase* ActorToScan : ActorsToScan)
+	{
+		ActorToScan->ScanActor(ScanSpeed, Range);
 	}
 }

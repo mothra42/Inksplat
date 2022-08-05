@@ -44,7 +44,7 @@ void APaintableActorBase::PaintActor(const FHitResult& Hit, const FLinearColor& 
 	}
 }
 
-void APaintableActorBase::ScanActor(const float ScanSpeed)
+void APaintableActorBase::ScanActor(const float ScanSpeed, const float Range)
 {
 	TArray<UActorComponent*> PaintableMeshes = GetComponentsByClass(UPaintableStaticMeshComponent::StaticClass());
 	UE_LOG(LogTemp, Warning, TEXT("Scanning Actor"));
@@ -53,7 +53,7 @@ void APaintableActorBase::ScanActor(const float ScanSpeed)
 		UPaintableStaticMeshComponent* PaintableMesh = Cast<UPaintableStaticMeshComponent>(Mesh);
 		if (PaintableMesh != nullptr)
 		{
-			PaintableMesh->ScanMesh(ScanSpeed);
+			PaintableMesh->ScanMesh(ScanSpeed, Range);
 		}
 	}
 }
