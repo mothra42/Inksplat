@@ -4,6 +4,7 @@
 #include "PaintableActorBase.h"
 #include "PaintableComponents/PaintableStaticMeshComponent.h"
 #include "PaintableComponents/PaintableSkeletalMeshComponent.h"
+#include "PaintableComponents/ScannableStaticMesh.h"
 
 // Sets default values
 APaintableActorBase::APaintableActorBase()
@@ -46,14 +47,14 @@ void APaintableActorBase::PaintActor(const FHitResult& Hit, const FLinearColor& 
 
 void APaintableActorBase::ScanActor(const float ScanSpeed, const float Range)
 {
-	TArray<UActorComponent*> PaintableMeshes = GetComponentsByClass(UPaintableStaticMeshComponent::StaticClass());
+	TArray<UActorComponent*> PaintableMeshes = GetComponentsByClass(UScannableStaticMesh::StaticClass());
 	UE_LOG(LogTemp, Warning, TEXT("Scanning Actor"));
 	for (UActorComponent* Mesh : PaintableMeshes)
 	{
-		UPaintableStaticMeshComponent* PaintableMesh = Cast<UPaintableStaticMeshComponent>(Mesh);
-		if (PaintableMesh != nullptr)
+		UScannableStaticMesh* ScannableMesh = Cast<UScannableStaticMesh>(Mesh);
+		if (ScannableMesh != nullptr)
 		{
-			PaintableMesh->ScanMesh(ScanSpeed, Range);
+			ScannableMesh->ScanMesh(ScanSpeed, Range);
 		}
 	}
 }

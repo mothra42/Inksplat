@@ -34,10 +34,7 @@ TArray<APaintableActorBase*> UTerrainScanComponent::GetPaintableActorsWithinRadi
 	{
 		for (TObjectIterator<APaintableActorBase> Itr; Itr; ++Itr)
 		{
-			if (Itr->GetLastRenderTime() < 0.01)
-			{
-				ActorsWithinRange.Add(*Itr);
-			}
+			ActorsWithinRange.Add(*Itr);
 		}
 	}
 
@@ -50,6 +47,9 @@ void UTerrainScanComponent::ScanActors_Implementation(const TArray<APaintableAct
 	UE_LOG(LogTemp, Warning, TEXT("Num actors are %i"), ActorsToScan.Num());
 	for (APaintableActorBase* ActorToScan : ActorsToScan)
 	{
-		ActorToScan->ScanActor(ScanSpeed, Range);
+		if (ActorToScan != nullptr)
+		{
+			ActorToScan->ScanActor(ScanSpeed, Range);
+		}
 	}
 }

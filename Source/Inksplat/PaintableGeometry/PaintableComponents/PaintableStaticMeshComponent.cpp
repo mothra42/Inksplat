@@ -16,18 +16,18 @@
 
 UPaintableStaticMeshComponent::UPaintableStaticMeshComponent()
 {
-	//static ConstructorHelpers::FObjectFinder<UMaterial> PaintableMaterialFinder(
-	//	TEXT("/Game/PaintableMaterials/M_PaintableMaterial_TransparencyTest")
-	//);
+	static ConstructorHelpers::FObjectFinder<UMaterial> PaintableMaterialFinder(
+		TEXT("/Game/PaintableMaterials/M_PaintableMaterial")
+	);
 
 	static ConstructorHelpers::FObjectFinder<UMaterial> BrushMaterialFinder(
 		TEXT("/Game/PaintableMaterials/M_Brush")
 	);
 
-	//if (PaintableMaterialFinder.Succeeded())
-	//{
-	//	ParentMaterial = PaintableMaterialFinder.Object;
-	//}
+	if (PaintableMaterialFinder.Succeeded())
+	{
+		ParentMaterial = PaintableMaterialFinder.Object;
+	}
 	if (BrushMaterialFinder.Succeeded())
 	{
 		BrushMaterial = BrushMaterialFinder.Object;
@@ -143,60 +143,4 @@ FVector UPaintableStaticMeshComponent::CalculatePaintScale(FVector Normal)
 		//xy plane
 		return FVector(MeshScale.X, MeshScale.Y, 0);
 	}
-}
-
-void UPaintableStaticMeshComponent::ScanMesh(const float ScanSpeedToSet, const float RangeToSet)
-{
-	//if (GetOwner()->GetLocalRole() == ROLE_Authority)
-	//{
-	//	ScanSpeed = ScanSpeedToSet;
-	//}
-
-	ScanSpeed = ScanSpeedToSet;
-	MaxRange = RangeToSet;
-
-	MeshMaterialInstance->SetScalarParameterValue(FName("ScanSpeed"), ScanSpeed);
-	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle_ScanTime,
-		this,
-		&UPaintableStaticMeshComponent::ProgressScan,
-		ScanTime,
-		true
-	);
-}
-
-//void UPaintableStaticMeshComponent::OnRep_UpdateSpeedParam()
-//{
-//	if (GetOwner()->GetLocalRole() != ROLE_Authority)
-//	{
-//		UE_LOG(LogTemp, Warning, TEXT("Replicating ScanSpeed in On Rep"));
-//		UE_LOG(LogTemp, Warning, TEXT("ScanSpeed is %f"), ScanSpeed);
-//		MeshMaterialInstance->SetScalarParameterValue(FName("ScanSpeed"), ScanSpeed);
-//		GetWorld()->GetTimerManager().SetTimer(
-//			TimerHandle_ScanTime,
-//			this,
-//			&UPaintableStaticMeshComponent::ProgressScan,
-//			ScanTime,
-//			true
-//		);
-//	}
-//}
-
-void UPaintableStaticMeshComponent::StopScan()
-{
-	ScanSpeed = 0.0f;
-}
-
-void UPaintableStaticMeshComponent::ProgressScan()
-{
-	CurrentRange = FMath::Clamp(CurrentRange + 0.01f, 0.f, MaxRange);
-	UE_LOG(LogTemp, Warning, TEXT("Progressing Scan and range is %f"), CurrentRange);
-	if (CurrentRange >= MaxRange)
-	{
-		//reset range
-		CurrentRange = 0.f;
-		//clear timer
-		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_ScanTime);
-	}
-	MeshMaterialInstance->SetScalarParameterValue(FName("ScanProgression"), CurrentRange);
 }
