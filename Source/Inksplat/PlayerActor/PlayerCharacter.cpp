@@ -4,8 +4,6 @@
 #include "../PaintableGeometry/PaintableComponents/PaintableSkeletalMeshComponent.h"
 #include "../Weapons/PaintGun.h"
 #include "../AbilityComponents/BaseAbilityComponent.h"
-//#include"../AbilityComponents/ForcePushAbilityComponent.h"
-//#include"../AbilityComponents/TerrainScanComponent.h"
 #include "Materials/Material.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
