@@ -119,7 +119,9 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 	// Bind ability event
 	PlayerInputComponent->BindAction("UsePrimaryAbility", IE_Pressed, this, &APlayerCharacter::UsePrimaryAbility);
+	PlayerInputComponent->BindAction("UsePrimaryAbility", IE_Released, this, &APlayerCharacter::EndPrimaryAbility);
 	PlayerInputComponent->BindAction("UseSecondaryAbility", IE_Pressed, this, &APlayerCharacter::UseSecondaryAbility);
+	PlayerInputComponent->BindAction("UseSecondaryAbility", IE_Released, this, &APlayerCharacter::EndSecondaryAbility);
 
 
 	// Bind movement events
@@ -169,11 +171,27 @@ void APlayerCharacter::UsePrimaryAbility()
 	}
 }
 
+void APlayerCharacter::EndPrimaryAbility()
+{
+	if (PrimaryAbilityComponent != nullptr)
+	{
+		PrimaryAbilityComponent->EndAbilityUse();
+	}
+}
+
 void APlayerCharacter::UseSecondaryAbility()
 {
 	if (SecondaryAbilityComponent != nullptr)
 	{
 		SecondaryAbilityComponent->UseAbility();
+	}
+}
+
+void APlayerCharacter::EndSecondaryAbility()
+{
+	if (SecondaryAbilityComponent != nullptr)
+	{
+		SecondaryAbilityComponent->EndAbilityUse();
 	}
 }
 

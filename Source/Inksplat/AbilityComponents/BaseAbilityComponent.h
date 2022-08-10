@@ -45,6 +45,8 @@ protected:
 public:	
 	virtual void UseAbility();
 
+	virtual void EndAbilityUse();
+
 	virtual void SetTempPaintColor(const FColor ColorToSet) { return; }
 
 		

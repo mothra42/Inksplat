@@ -42,6 +42,11 @@ void UBaseAbilityComponent::ServerExecuteAbility_Implementation()
 	return;
 }
 
+void UBaseAbilityComponent::EndAbilityUse()
+{
+	return;
+}
+
 void UBaseAbilityComponent::BeginCoolDown()
 {
 	bCanUseAbility = false;

@@ -122,7 +122,13 @@ protected:
 protected:
 	void UsePrimaryAbility();
 
+	//If ability is active as long as button is held this will end the ability.
+	void EndPrimaryAbility();
+
+	//If ability is active as long as button is held this will end the ability.
 	void UseSecondaryAbility();
+
+	void EndSecondaryAbility();
 
 //Movement Methods
 protected:
