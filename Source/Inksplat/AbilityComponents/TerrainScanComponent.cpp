@@ -23,8 +23,8 @@ void UTerrainScanComponent::BeginPlay()
 void UTerrainScanComponent::ServerExecuteAbility_Implementation()
 {
 	TArray<APaintableActorBase*> ActorsWithinRange = GetScannableActors();
-
 	ScanActors(ActorsWithinRange);
+	BeginCoolDown();
 }
 
 TArray<APaintableActorBase*> UTerrainScanComponent::GetScannableActors()
