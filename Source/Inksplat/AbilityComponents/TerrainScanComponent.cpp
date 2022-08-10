@@ -22,12 +22,12 @@ void UTerrainScanComponent::BeginPlay()
 
 void UTerrainScanComponent::ServerExecuteAbility_Implementation()
 {
-	TArray<APaintableActorBase*> ActorsWithinRange = GetPaintableActorsWithinRadius();
+	TArray<APaintableActorBase*> ActorsWithinRange = GetScannableActors();
 
 	ScanActors(ActorsWithinRange);
 }
 
-TArray<APaintableActorBase*> UTerrainScanComponent::GetPaintableActorsWithinRadius()
+TArray<APaintableActorBase*> UTerrainScanComponent::GetScannableActors()
 {
 	TArray<APaintableActorBase*> ActorsWithinRange{};
 	if (GetOwner()->GetLocalRole() == ROLE_Authority)

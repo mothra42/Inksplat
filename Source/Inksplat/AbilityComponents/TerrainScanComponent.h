@@ -30,7 +30,7 @@ protected:
 private:
 	virtual void ServerExecuteAbility_Implementation() override;
 
-	TArray<APaintableActorBase*> GetPaintableActorsWithinRadius();
+	TArray<APaintableActorBase*> GetScannableActors();
 
 	UFUNCTION(Client, Reliable)
 	void ScanActors(const TArray<APaintableActorBase*>& ActorsToScan);
