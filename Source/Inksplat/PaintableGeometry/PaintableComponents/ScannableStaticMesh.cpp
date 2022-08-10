@@ -35,10 +35,10 @@ void UScannableStaticMesh::ScanMesh(const float ScanSpeed, const float RangeToSe
 
 	MeshMaterialInstance->SetScalarParameterValue(FName("ScanSpeed"), ScanSpeed);
 	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle_ScanTime,
+		TimerHandle_ProgressScan,
 		this,
 		&UScannableStaticMesh::ProgressScan,
-		ScanTime,
+		TimeBetweenScanUpdates,
 		true
 	);
 }
@@ -46,12 +46,13 @@ void UScannableStaticMesh::ScanMesh(const float ScanSpeed, const float RangeToSe
 void UScannableStaticMesh::ProgressScan()
 {
 	CurrentRange = FMath::Clamp(CurrentRange + 0.01f, 0.f, MaxRange);
+	UE_LOG(LogTemp, Warning, TEXT("CurrentRange is %f"), CurrentRange);
 	if (CurrentRange >= MaxRange)
 	{
 		//reset range
 		CurrentRange = 0.f;
 		//clear timer
-		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_ScanTime);
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_ProgressScan);
 	}
 	MeshMaterialInstance->SetScalarParameterValue(FName("ScanProgression"), CurrentRange);
 }

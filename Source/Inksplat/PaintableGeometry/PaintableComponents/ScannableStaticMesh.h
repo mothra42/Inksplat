@@ -33,8 +33,8 @@ protected:
 	float CurrentRange = 0.f;
 
 private:
-	FTimerHandle TimerHandle_ScanTime;
+	FTimerHandle TimerHandle_ProgressScan;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Object Scan")
-	float ScanTime = 0.01f;
+	UPROPERTY(EditDefaultsOnly, Category = "Scan Properties")
+	float TimeBetweenScanUpdates = 0.01f;
 };
