@@ -10,7 +10,11 @@ UCLASS()
 class INKSPLAT_API APlayerGhost : public AActor
 {
 	GENERATED_BODY()
-	
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = Mesh)
+	class USkeletalMeshComponent* BodyMesh;
+
 public:	
 	// Sets default values for this actor's properties
 	APlayerGhost();
@@ -20,7 +24,5 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 };
