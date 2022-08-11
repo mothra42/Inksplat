@@ -5,9 +5,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "../PlayerActor/PlayerCharacter.h"
 #include "../PaintableGeometry/PaintableActorBase.h"
-#include "../PaintableGeometry/PaintableComponents/PaintableStaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "DrawDebugHelpers.h"
 
 UTerrainScanComponent::UTerrainScanComponent()
 {
