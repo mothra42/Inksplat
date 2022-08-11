@@ -20,6 +20,9 @@ protected:
 	//Scan radius is set to a default of 60 meters
 	UPROPERTY(Category = "Scan Properties", EditDefaultsOnly)
 	float ScanRadius = 6000.0f;
+private:
+	UPROPERTY(EditDefaultsOnly, Category = GhostSpawnSettings)
+	TSubclassOf<class APlayerGhost> PlayerGhostClass;
 
 private:
 	virtual void ServerExecuteAbility_Implementation() override;
@@ -28,4 +31,11 @@ private:
 
 	UFUNCTION(Client, Reliable)
 	void RevealPlayers(const TArray<APlayerCharacter*>& PlayersToReveal);
+
+	UFUNCTION(Server, Reliable)
+	void ServerBeginCoolDown();
+
+	virtual void EndAbilityUse() override;
+
+	void HidePlayers();
 };

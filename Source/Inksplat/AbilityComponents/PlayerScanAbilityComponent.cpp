@@ -4,6 +4,8 @@
 #include "PlayerScanAbilityComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "../PlayerActor/PlayerCharacter.h"
+#include "../PaintableGeometry/PaintableComponents/PaintableSkeletalMeshComponent.h"
+#include "AbilityActors/PlayerGhost.h"
 
 UPlayerScanAbilityComponent::UPlayerScanAbilityComponent()
 {
@@ -43,9 +45,35 @@ TArray<APlayerCharacter*> UPlayerScanAbilityComponent::GetPlayerPawnsWithinRadiu
 
 void UPlayerScanAbilityComponent::RevealPlayers_Implementation(const TArray<APlayerCharacter*>& PlayersToReveal)
 {
-	//TODO
-	//change texture on skeletal mesh to reveal the outline.
-	//Design question to answer, do I show a snapshot? or does the effect last as long as the player uses the ability.
-	//I'm leaning towards the snapshot method for now, but I will make both to as I think its something that needs to be tested in playtesting.
+	//Spawn ghost of player in that position, preferably in the same pose as the player at the time of scan.
+	for (APlayerCharacter* PlayerToReveal : PlayersToReveal)
+	{
+		if (PlayerToReveal != nullptr && PlayerToReveal != GetOwner())
+		{
+			FVector SpawnLocation = PlayerToReveal->GetFullBodyMesh()->GetComponentLocation();
+			FRotator SpawnRotation = PlayerToReveal->GetFullBodyMesh()->GetComponentRotation();
+
+			GetWorld()->SpawnActor<APlayerGhost>(PlayerGhostClass, SpawnLocation, SpawnRotation);
+		}
+	}
 }
 
+void UPlayerScanAbilityComponent::EndAbilityUse()
+{
+	HidePlayers();
+	ServerBeginCoolDown();
+}
+
+void UPlayerScanAbilityComponent::HidePlayers()
+{
+	//remove player ghosts
+	for (TObjectIterator<APlayerGhost> Itr; Itr; ++Itr)
+	{
+		Itr->Destroy();
+	}
+}
+
+void UPlayerScanAbilityComponent::ServerBeginCoolDown_Implementation()
+{
+	BeginCoolDown();
+}
