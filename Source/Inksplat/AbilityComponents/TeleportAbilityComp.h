@@ -21,12 +21,20 @@ protected:
 	UPROPERTY(Category = "Teleport Settings", EditDefaultsOnly)
 	float TeleportRange = 1000.f;
 
+	UPROPERTY(Category = "Teleport Settings", EditDefaultsOnly)
+	float PawnHeightCorrection = 96.f;
+
 private:
 	virtual void ServerExecuteAbility_Implementation() override;
 
 	FVector FindTeleportLocation();
 
-	bool IsLocationValid(const FVector LocationToTest);
+	FVector FindSafeTeleportLocation(const FVector TeleportDirection);
+
+	FVector FindCorrectZPlacement(FVector XYLocation);
+
+	//utility method used to line trace and find any blocking geometry
+	void LineTraceForGeometry(TArray<FHitResult>& OutHitResults, const FVector StartLocation, const FVector EndLocation);
 
 	void TeleportToLocation(const FVector LocationToTeleportTo);
 };
