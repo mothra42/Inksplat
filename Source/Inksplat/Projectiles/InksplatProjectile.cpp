@@ -95,7 +95,7 @@ void AInksplatProjectile::PaintActor()
 		LineTraceHit,
 		HitLocation,
 		TraceEndLocation,
-		ECC_Visibility,
+		ECC_Camera,
 		TraceParams
 	);
 
