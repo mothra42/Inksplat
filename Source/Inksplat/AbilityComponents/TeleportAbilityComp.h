@@ -24,6 +24,9 @@ protected:
 	UPROPERTY(Category = "Teleport Settings", EditDefaultsOnly)
 	float PawnHeightCorrection = 96.f;
 
+	UPROPERTY(Category = "Teleport Settings", EditDefaultsOnly)
+	FVector ZPlaneLineTraceOffset = FVector(0, 0, 20000.f);
+
 private:
 	virtual void ServerExecuteAbility_Implementation() override;
 
@@ -31,10 +34,12 @@ private:
 
 	FVector FindSafeTeleportLocation(const FVector TeleportDirection);
 
-	FVector FindCorrectZPlacement(FVector XYLocation);
+	void CorrectTeleportElevation(FVector& XYLocation);
 
 	//utility method used to line trace and find any blocking geometry
 	void LineTraceForGeometry(TArray<FHitResult>& OutHitResults, const FVector StartLocation, const FVector EndLocation);
+
+	bool IsLocationInGeometry(const FVector& TeleportLocation);
 
 	void TeleportToLocation(const FVector LocationToTeleportTo);
 };

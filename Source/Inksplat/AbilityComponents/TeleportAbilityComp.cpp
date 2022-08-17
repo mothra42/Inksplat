@@ -3,6 +3,8 @@
 
 #include "TeleportAbilityComp.h"
 #include "Net/UnrealNetwork.h"
+#include "Kismet/GameplayStatics.h"
+#include "../PlayerActor/PlayerCharacter.h"
 #include "DrawDebugHelpers.h"
 
 UTeleportAbilityComp::UTeleportAbilityComp()
@@ -12,8 +14,8 @@ UTeleportAbilityComp::UTeleportAbilityComp()
 
 void UTeleportAbilityComp::ServerExecuteAbility_Implementation()
 {
-	//TeleportToLocation(FindTeleportLocation());
-	FindTeleportLocation();
+	TeleportToLocation(FindTeleportLocation());
+	//FindTeleportLocation();
 }
 
 FVector UTeleportAbilityComp::FindTeleportLocation()
@@ -21,20 +23,19 @@ FVector UTeleportAbilityComp::FindTeleportLocation()
 	FVector TeleportLocation;
 	FVector PlayerForwardDirection = GetOwner()->GetActorForwardVector();
 	FVector PlayerTeleportDirection = FVector(PlayerForwardDirection.X, PlayerForwardDirection.Y, 0).GetSafeNormal();
-	FindSafeTeleportLocation(PlayerTeleportDirection);
-	////Using Forward vector is slightly fraut because it could be pointing up or down.
-	//TeleportLocation = GetOwner()->GetActorLocation() + 
-	//	(PlayerTeleportDirection * TeleportRange);
+	TeleportLocation = FindSafeTeleportLocation(PlayerTeleportDirection);
 	return TeleportLocation;
 }
 
 FVector UTeleportAbilityComp::FindSafeTeleportLocation(const FVector TeleportDirection)
 {
-	TArray<FHitResult> HitResults;
+	//Set initial teleportation location before teleport safety checks.
+	FVector TeleportLocation = GetOwner()->GetActorLocation() + (TeleportDirection * TeleportRange);
 
+	TArray<FHitResult> HitResults;
 	LineTraceForGeometry(HitResults,
 		GetOwner()->GetActorLocation(),
-		GetOwner()->GetActorLocation() + (TeleportDirection * TeleportRange)
+		TeleportLocation
 	);
 
 	for (FHitResult HitResult : HitResults)
@@ -45,31 +46,73 @@ FVector UTeleportAbilityComp::FindSafeTeleportLocation(const FVector TeleportDir
 			if (Tag == FName("LevelExtent"))
 			{
 				//TODO remove magic number 55.f for the radius of owner's capsule component
-				FVector AdjustedLocation = HitResult.Location - (TeleportDirection * 55.f);
-				return FindCorrectZPlacement(AdjustedLocation);
+				TeleportLocation = HitResult.Location - (TeleportDirection * 55.f);
 			}
 		}
 	}
-	return FindCorrectZPlacement(GetOwner()->GetActorLocation() + (TeleportDirection * TeleportRange));
+
+	CorrectTeleportElevation(TeleportLocation);
+
+	return TeleportLocation;
 }
 
-FVector UTeleportAbilityComp::FindCorrectZPlacement(FVector XYLocation)
+void UTeleportAbilityComp::CorrectTeleportElevation(FVector& XYLocation)
 {
 	//This method will line trace down towards the 0 plane to find the closest z plane to the player and place them there.
 	//this is used to handle ramps or any uneven geometry.
-	return FVector{};
+	TArray<FHitResult> HitResults;
+	LineTraceForGeometry(HitResults,
+		ZPlaneLineTraceOffset + XYLocation,
+		FVector(XYLocation.X, XYLocation.Y, -10)
+	);
+	//Find Hit location that is closest to player's current elevation
+	float ClosestElevation = FMath::Abs(GetOwner()->GetActorLocation().Z - XYLocation.Z);
+	for (FHitResult HitResult : HitResults)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Hit Results is %i long"), HitResults.Num());
+		float PotentialClosestElevation = FMath::Abs(GetOwner()->GetActorLocation().Z - HitResult.Location.Z);
+		if (!IsLocationInGeometry(HitResult.Location + FVector(0, 0, 96.f)))
+		{
+			if (PotentialClosestElevation <= ClosestElevation)
+			{
+				XYLocation.Z = HitResult.Location.Z;
+				ClosestElevation = PotentialClosestElevation;
+			}
+		}
+		DrawDebugSphere(GetWorld(), HitResult.Location, 10, 8, FColor::Blue, false, 10.f);
+	}
+
+	XYLocation.Z += 96.f;
 }
 
 void UTeleportAbilityComp::LineTraceForGeometry(TArray<FHitResult>& OutHitResults, const FVector StartLocation, const FVector EndLocation)
 {
+	TArray<AActor*> AllPlayers;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacter::StaticClass(), AllPlayers);
 	FCollisionQueryParams TraceParams;
 	TraceParams.bTraceComplex = true;
-	TraceParams.AddIgnoredActor(GetOwner());
+	TraceParams.AddIgnoredActors(AllPlayers);
+	DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 10.f, 0, 3.f);
 	GetWorld()->LineTraceMultiByChannel(OutHitResults,
 		StartLocation,
 		EndLocation,
 		ECC_Visibility,
 		TraceParams);
+}
+
+bool UTeleportAbilityComp::IsLocationInGeometry(const FVector& TeleportLocation)
+{
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(10.f);
+	UE_LOG(LogTemp, Warning, TEXT("Testing if location is in geometry"));
+	DrawDebugSphere(GetWorld(), TeleportLocation, 10, 8, FColor::Green, false, 10.f);
+	FHitResult Hit;
+	return GetWorld()->SweepSingleByChannel(Hit,
+		TeleportLocation,
+		TeleportLocation + FVector(0, 0, 0.1),
+		GetOwner()->GetActorRotation().Quaternion(),
+		ECC_Visibility,
+		Sphere
+	);
 }
 
 void UTeleportAbilityComp::TeleportToLocation(const FVector LocationToTeleportTo)
