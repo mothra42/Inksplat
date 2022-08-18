@@ -24,6 +24,8 @@ protected:
 	UPROPERTY(Category = "Teleport Settings", EditDefaultsOnly)
 	float PawnHeightCorrection = 96.f;
 
+	float PawnRadius = 55.f;
+
 	UPROPERTY(Category = "Teleport Settings", EditDefaultsOnly)
 	FVector ZPlaneLineTraceOffset = FVector(0, 0, 20000.f);
 
@@ -42,4 +44,6 @@ private:
 	bool IsLocationInGeometry(const FVector& TeleportLocation);
 
 	void TeleportToLocation(const FVector LocationToTeleportTo);
+
+
 };

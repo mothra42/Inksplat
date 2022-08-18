@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+#define TELEPORT_TRACE ECC_GameTraceChannel2
+
 #include "TeleportAbilityComp.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
@@ -15,7 +17,6 @@ UTeleportAbilityComp::UTeleportAbilityComp()
 void UTeleportAbilityComp::ServerExecuteAbility_Implementation()
 {
 	TeleportToLocation(FindTeleportLocation());
-	//FindTeleportLocation();
 }
 
 FVector UTeleportAbilityComp::FindTeleportLocation()
@@ -66,20 +67,16 @@ void UTeleportAbilityComp::CorrectTeleportElevation(FVector& XYLocation)
 		FVector(XYLocation.X, XYLocation.Y, -10)
 	);
 	//Find Hit location that is closest to player's current elevation
+	XYLocation = HitResults.Num() >= 1 ? HitResults[0].Location : XYLocation;
 	float ClosestElevation = FMath::Abs(GetOwner()->GetActorLocation().Z - XYLocation.Z);
 	for (FHitResult HitResult : HitResults)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Hit Results is %i long"), HitResults.Num());
 		float PotentialClosestElevation = FMath::Abs(GetOwner()->GetActorLocation().Z - HitResult.Location.Z);
-		if (!IsLocationInGeometry(HitResult.Location + FVector(0, 0, 96.f)))
+		if (PotentialClosestElevation <= ClosestElevation)
 		{
-			if (PotentialClosestElevation <= ClosestElevation)
-			{
-				XYLocation.Z = HitResult.Location.Z;
-				ClosestElevation = PotentialClosestElevation;
-			}
+			XYLocation.Z = HitResult.Location.Z;
+			ClosestElevation = PotentialClosestElevation;
 		}
-		DrawDebugSphere(GetWorld(), HitResult.Location, 10, 8, FColor::Blue, false, 10.f);
 	}
 
 	XYLocation.Z += 96.f;
@@ -90,29 +87,37 @@ void UTeleportAbilityComp::LineTraceForGeometry(TArray<FHitResult>& OutHitResult
 	TArray<AActor*> AllPlayers;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacter::StaticClass(), AllPlayers);
 	FCollisionQueryParams TraceParams;
-	TraceParams.bTraceComplex = true;
+	TraceParams.bTraceComplex = false;
 	TraceParams.AddIgnoredActors(AllPlayers);
 	DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 10.f, 0, 3.f);
 	GetWorld()->LineTraceMultiByChannel(OutHitResults,
 		StartLocation,
 		EndLocation,
-		ECC_Visibility,
+		TELEPORT_TRACE,
 		TraceParams);
 }
 
 bool UTeleportAbilityComp::IsLocationInGeometry(const FVector& TeleportLocation)
 {
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(10.f);
-	UE_LOG(LogTemp, Warning, TEXT("Testing if location is in geometry"));
-	DrawDebugSphere(GetWorld(), TeleportLocation, 10, 8, FColor::Green, false, 10.f);
-	FHitResult Hit;
-	return GetWorld()->SweepSingleByChannel(Hit,
-		TeleportLocation,
-		TeleportLocation + FVector(0, 0, 0.1),
-		GetOwner()->GetActorRotation().Quaternion(),
-		ECC_Visibility,
-		Sphere
-	);
+	//FCollisionShape Sphere = FCollisionShape::MakeSphere(100.f);
+	//UE_LOG(LogTemp, Warning, TEXT("Testing if location is in geometry"));
+	//DrawDebugSphere(GetWorld(), TeleportLocation, 100, 8, FColor::Green, false, 10.f);
+	//TArray<FHitResult> Hits;
+	//TArray<AActor*> AllPlayers;
+	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacter::StaticClass(), AllPlayers);
+	//FCollisionQueryParams TraceParams;
+	//TraceParams.bTraceComplex = false;
+	//TraceParams.AddIgnoredActors(AllPlayers);
+	//bool bIsOverlapped =  GetWorld()->SweepMultiByChannel(Hits,
+	//	TeleportLocation,
+	//	TeleportLocation + FVector(0, 0, 1.0),
+	//	GetOwner()->GetActorRotation().Quaternion(),
+	//	ECC_Visibility,
+	//	Sphere,
+	//	TraceParams
+	//);
+	//UE_LOG(LogTemp, Warning, TEXT("Found overlapping geometry %i"), bIsOverlapped);
+	return false;
 }
 
 void UTeleportAbilityComp::TeleportToLocation(const FVector LocationToTeleportTo)
