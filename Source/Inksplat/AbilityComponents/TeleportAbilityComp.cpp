@@ -128,3 +128,12 @@ void UTeleportAbilityComp::TeleportToLocation(const FVector LocationToTeleportTo
 		true
 	);
 }
+
+void UTeleportAbilityComp::SplatterPaint(const FVector& TeleportLocation)
+{
+	//Do a sphere trace looking for paintable actors
+		//for each paintable actor found 
+			//paint the point closest to the teleport location
+			//find a number(6 to start with) of other points to paint to make a splatter like effect.
+				//paint each of those points.
+}
