@@ -9,6 +9,9 @@
 #include "../PlayerActor/PlayerCharacter.h"
 #include "DrawDebugHelpers.h"
 
+//for splatter paint
+#include "../Interfaces/PaintableObjectInterface.h"
+
 UTeleportAbilityComp::UTeleportAbilityComp()
 {
 	SetIsReplicated(true);
@@ -16,7 +19,9 @@ UTeleportAbilityComp::UTeleportAbilityComp()
 
 void UTeleportAbilityComp::ServerExecuteAbility_Implementation()
 {
-	TeleportToLocation(FindTeleportLocation());
+	FVector TeleportLocation = FindTeleportLocation();
+	TeleportToLocation(TeleportLocation);
+	SplatterPaint(TeleportLocation, 10, 10);
 }
 
 FVector UTeleportAbilityComp::FindTeleportLocation()
@@ -129,11 +134,62 @@ void UTeleportAbilityComp::TeleportToLocation(const FVector LocationToTeleportTo
 	);
 }
 
-void UTeleportAbilityComp::SplatterPaint(const FVector& TeleportLocation)
+void UTeleportAbilityComp::SplatterPaint(const FVector& SplatterOrigin, const int32 NumLatitudeSegments, const int32 NumLongitudeSegments)
 {
-	//Do a sphere trace looking for paintable actors
-		//for each paintable actor found 
-			//paint the point closest to the teleport location
-			//find a number(6 to start with) of other points to paint to make a splatter like effect.
-				//paint each of those points.
+	TArray<FVector> EndLocations;
+	for (int i = 0; i <= NumLongitudeSegments; i++)
+	{
+		float Pitch = 90 - ((180 / NumLongitudeSegments) * i);
+		for (int j = 0; j <= NumLatitudeSegments; j++)
+		{
+			float Yaw = 0 - ((360 / NumLatitudeSegments) * j);
+			FVector EndLocation = FRotator(Pitch, Yaw, 0).Vector() * PaintSprayRadius + SplatterOrigin;
+			EndLocations.Add(EndLocation);
+			DrawDebugLine(GetWorld(),
+				SplatterOrigin,
+				EndLocation,
+				FColor::Purple,
+				false,
+				10.f);
+		}
+	 }
+
+	PaintSurface(SplatterOrigin, EndLocations);
+}
+
+void UTeleportAbilityComp::PaintSurface_Implementation(const FVector& Origin, const TArray<FVector>& EndTraceLocations)
+{
+
+	FHitResult LineTraceHit;
+	FCollisionQueryParams TraceParams;
+	TraceParams.bTraceComplex = true;
+	TraceParams.AddIgnoredActor(GetOwner());
+	TraceParams.bReturnFaceIndex = true;
+
+	for (FVector EndTraceLocation : EndTraceLocations)
+	{
+		bool bTraceHit = GetWorld()->LineTraceSingleByChannel(
+			LineTraceHit,
+			Origin,
+			EndTraceLocation,
+			ECC_Camera,
+			TraceParams
+		);
+
+		if (bTraceHit)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Actor to paint is %s"), *LineTraceHit.Actor->GetName());
+			IPaintableObjectInterface* PaintableObject = Cast<IPaintableObjectInterface>(LineTraceHit.Actor);
+			if (PaintableObject)
+			{
+				APlayerCharacter* OwningPawn = Cast<APlayerCharacter>(GetOwner());
+				//TODO get owning actors color here.
+				PaintableObject->PaintActor(LineTraceHit, OwningPawn->GetPaintColor());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Paintable Object is null"));
+			}
+		}
+	}
 }

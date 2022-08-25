@@ -26,6 +26,12 @@ protected:
 
 	float PawnRadius = 55.f;
 
+	UPROPERTY(Category = "Teleport Attack Settings", EditDefaultsOnly)
+	float PaintSprayRadius = 300.f;
+
+	UPROPERTY(Category = "Teleport Attack Settings", EditDefaultsOnly)
+	bool bShowDebugSphere = false;
+
 	UPROPERTY(Category = "Teleport Settings", EditDefaultsOnly)
 	FVector ZPlaneLineTraceOffset = FVector(0, 0, 20000.f);
 
@@ -44,6 +50,11 @@ private:
 	bool IsLocationInGeometry(const FVector& TeleportLocation);
 
 	void TeleportToLocation(const FVector LocationToTeleportTo);
+
+	void SplatterPaint(const FVector& SplatterOrigin, const int32 NumLatitudeSegments, const int32 NumLongitudeSegments);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void PaintSurface(const FVector& Origin, const TArray<FVector>& EndTraceLocations);
 
 
 };
