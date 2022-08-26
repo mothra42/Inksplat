@@ -26,7 +26,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary = false, float TempPaintLifetime = 0.f) override;
+	virtual void PaintActor(const FHitResult& Hit, 
+		const FLinearColor& Color,  
+		bool bIsTemporary = false, 
+		float TempPaintLifetime = 0.f,
+		const float ScaleModifier = 1.0f) override;
 
 	virtual void ScanActor(const float ScanSpeed, const float Range);
 

@@ -31,13 +31,17 @@ void APaintableActorBase::Tick(float DeltaTime)
 
 }
 
-void APaintableActorBase::PaintActor(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary, float TempPaintLifetime)
+void APaintableActorBase::PaintActor(const FHitResult& Hit, 
+	const FLinearColor& Color, 
+	bool bIsTemporary, 
+	float TempPaintLifetime,
+	const float ScaleModifier)
 {
 	UPaintableStaticMeshComponent* HitStaticMeshComp = Cast<UPaintableStaticMeshComponent>(Hit.Component);
 	UPaintableSkeletalMeshComponent* HitSkeletalMeshComp = Cast<UPaintableSkeletalMeshComponent>(Hit.Component);
 	if (HitStaticMeshComp)
 	{
-		HitStaticMeshComp->PaintMesh(Hit, Color);
+		HitStaticMeshComp->PaintMesh(Hit, Color, ScaleModifier);
 	}
 	else if (HitSkeletalMeshComp)
 	{

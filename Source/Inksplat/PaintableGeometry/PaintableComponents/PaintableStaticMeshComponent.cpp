@@ -70,7 +70,7 @@ void UPaintableStaticMeshComponent::BeginPlay()
 }
 
 
-bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLinearColor& Color)
+bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLinearColor& Color, const float ScaleModifier)
 {
 	FVector2D UVPosition;
 	UGameplayStatics::FindCollisionUV(Hit, UVChannelToPaint, UVPosition);
@@ -78,6 +78,7 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 	float MaterialScale;
 	
 	CalculateUVStretchAndScale(Hit, UVPosition, MaterialScale, MaterialStretch);
+	MaterialScale *= ScaleModifier;
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
 	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
 	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);

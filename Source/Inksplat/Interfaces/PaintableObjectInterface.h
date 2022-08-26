@@ -22,5 +22,9 @@ class INKSPLAT_API IPaintableObjectInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary = false, float TempPaintLifetime = 0.f) { return; }
+	virtual void PaintActor(const FHitResult& Hit, 
+		const FLinearColor& Color,  
+		bool bIsTemporary = false, 
+		float TempPaintLifetime = 0.f,
+		const float ScaleModifier = 1.0f) { return; }
 };

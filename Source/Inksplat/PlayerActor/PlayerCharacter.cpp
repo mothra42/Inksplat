@@ -226,7 +226,11 @@ void APlayerCharacter::LookUpAtRate(float Rate)
 }
 
 
-void APlayerCharacter::PaintActor(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary, float TempPaintLifetime)
+void APlayerCharacter::PaintActor(const FHitResult& Hit, 
+	const FLinearColor& Color, 
+	bool bIsTemporary, 
+	float TempPaintLifetime, 
+	const float ScaleModifier)
 {
 	FullBodyMesh->PaintMesh(Hit, Color, bIsTemporary);
 }

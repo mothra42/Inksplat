@@ -27,7 +27,10 @@ protected:
 	float PawnRadius = 55.f;
 
 	UPROPERTY(Category = "Teleport Attack Settings", EditDefaultsOnly)
-	float PaintSprayRadius = 300.f;
+	float PaintSprayRadius = 250.f;
+
+	UPROPERTY(Category = "Teleport Attack Settings", EditDefaultsOnly)
+	float PaintTextureScaleModifier = 2.5f;
 
 	UPROPERTY(Category = "Teleport Attack Settings", EditDefaultsOnly)
 	bool bShowDebugSphere = false;

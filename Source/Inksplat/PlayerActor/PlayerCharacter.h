@@ -163,7 +163,7 @@ protected:
 	void EndPlay();
 
 public:
-	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary = false, float TempPaintLifetime = 0.f) override;
+	virtual void PaintActor(const FHitResult& Hit, const FLinearColor& Color, bool bIsTemporary = false, float TempPaintLifetime = 0.f, const float ScaleModifier = 1.0f) override;
 
 
 	//Called from paintable mesh whenever it is painted. Paintable mesh class holds all info related to painting coverage

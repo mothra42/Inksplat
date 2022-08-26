@@ -21,7 +21,7 @@ void UTeleportAbilityComp::ServerExecuteAbility_Implementation()
 {
 	FVector TeleportLocation = FindTeleportLocation();
 	TeleportToLocation(TeleportLocation);
-	SplatterPaint(TeleportLocation, 10, 10);
+	SplatterPaint(TeleportLocation, 20, 20);
 }
 
 FVector UTeleportAbilityComp::FindTeleportLocation()
@@ -94,7 +94,6 @@ void UTeleportAbilityComp::LineTraceForGeometry(TArray<FHitResult>& OutHitResult
 	FCollisionQueryParams TraceParams;
 	TraceParams.bTraceComplex = false;
 	TraceParams.AddIgnoredActors(AllPlayers);
-	DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 10.f, 0, 3.f);
 	GetWorld()->LineTraceMultiByChannel(OutHitResults,
 		StartLocation,
 		EndLocation,
@@ -145,12 +144,15 @@ void UTeleportAbilityComp::SplatterPaint(const FVector& SplatterOrigin, const in
 			float Yaw = 0 - ((360 / NumLatitudeSegments) * j);
 			FVector EndLocation = FRotator(Pitch, Yaw, 0).Vector() * PaintSprayRadius + SplatterOrigin;
 			EndLocations.Add(EndLocation);
-			DrawDebugLine(GetWorld(),
-				SplatterOrigin,
-				EndLocation,
-				FColor::Purple,
-				false,
-				10.f);
+			if (bShowDebugSphere)
+			{
+				DrawDebugLine(GetWorld(),
+					SplatterOrigin,
+					EndLocation,
+					FColor::Purple,
+					false,
+					10.f);
+			}
 		}
 	 }
 
@@ -184,7 +186,7 @@ void UTeleportAbilityComp::PaintSurface_Implementation(const FVector& Origin, co
 			{
 				APlayerCharacter* OwningPawn = Cast<APlayerCharacter>(GetOwner());
 				//TODO get owning actors color here.
-				PaintableObject->PaintActor(LineTraceHit, OwningPawn->GetPaintColor());
+				PaintableObject->PaintActor(LineTraceHit, OwningPawn->GetPaintColor(), false, 0.f, PaintTextureScaleModifier);
 			}
 			else
 			{

@@ -19,7 +19,7 @@ public:
 
 public:
 	//returns true if successfuly draws to mesh
-	bool PaintMesh(const FHitResult& Hit, const FLinearColor& Color);
+	bool PaintMesh(const FHitResult& Hit, const FLinearColor& Color, const float ScaleModifier);
 
 protected:
 	
