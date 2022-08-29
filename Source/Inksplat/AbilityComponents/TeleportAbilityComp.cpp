@@ -19,9 +19,17 @@ UTeleportAbilityComp::UTeleportAbilityComp()
 
 void UTeleportAbilityComp::ServerExecuteAbility_Implementation()
 {
+	BeginCoolDown();
 	FVector TeleportLocation = FindTeleportLocation();
 	TeleportToLocation(TeleportLocation);
-	SplatterPaint(TeleportLocation, 20, 20);
+
+	PaintSplatterDelegate.BindUFunction(this, FName("SplatterPaint"), TeleportLocation);
+	GetWorld()->GetTimerManager().SetTimer(
+		PaintSplatterDelay, 
+		PaintSplatterDelegate,
+		PaintSplatterDelayTime,
+		false
+	);
 }
 
 FVector UTeleportAbilityComp::FindTeleportLocation()
@@ -133,15 +141,15 @@ void UTeleportAbilityComp::TeleportToLocation(const FVector LocationToTeleportTo
 	);
 }
 
-void UTeleportAbilityComp::SplatterPaint(const FVector& SplatterOrigin, const int32 NumLatitudeSegments, const int32 NumLongitudeSegments)
+void UTeleportAbilityComp::SplatterPaint(const FVector& SplatterOrigin)
 {
 	TArray<FVector> EndLocations;
-	for (int i = 0; i <= NumLongitudeSegments; i++)
+	for (int i = 0; i <= NumPitchDivisions; i++)
 	{
-		float Pitch = 90 - ((180 / NumLongitudeSegments) * i);
-		for (int j = 0; j <= NumLatitudeSegments; j++)
+		float Pitch = 90 - ((180 / NumPitchDivisions) * i);
+		for (int j = 0; j <= NumYawDivisions; j++)
 		{
-			float Yaw = 0 - ((360 / NumLatitudeSegments) * j);
+			float Yaw = 0 - ((360 / NumYawDivisions) * j);
 			FVector EndLocation = FRotator(Pitch, Yaw, 0).Vector() * PaintSprayRadius + SplatterOrigin;
 			EndLocations.Add(EndLocation);
 			if (bShowDebugSphere)
@@ -161,7 +169,6 @@ void UTeleportAbilityComp::SplatterPaint(const FVector& SplatterOrigin, const in
 
 void UTeleportAbilityComp::PaintSurface_Implementation(const FVector& Origin, const TArray<FVector>& EndTraceLocations)
 {
-
 	FHitResult LineTraceHit;
 	FCollisionQueryParams TraceParams;
 	TraceParams.bTraceComplex = true;
@@ -185,7 +192,6 @@ void UTeleportAbilityComp::PaintSurface_Implementation(const FVector& Origin, co
 			if (PaintableObject)
 			{
 				APlayerCharacter* OwningPawn = Cast<APlayerCharacter>(GetOwner());
-				//TODO get owning actors color here.
 				PaintableObject->PaintActor(LineTraceHit, OwningPawn->GetPaintColor(), false, 0.f, PaintTextureScaleModifier);
 			}
 			else

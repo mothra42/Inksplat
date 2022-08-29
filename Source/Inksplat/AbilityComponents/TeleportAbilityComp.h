@@ -35,8 +35,21 @@ protected:
 	UPROPERTY(Category = "Teleport Attack Settings", EditDefaultsOnly)
 	bool bShowDebugSphere = false;
 
+	UPROPERTY(Category = "Teleport Attack Settings", EditDefaultsOnly)
+	int32 NumPitchDivisions = 20;
+
+	UPROPERTY(Category = "Teleport Attack Settings", EditDefaultsOnly)
+	int32 NumYawDivisions = 20;
+
+	UPROPERTY(Category = "Teleport Attack Settings", EditDefaultsOnly)
+	float PaintSplatterDelayTime = 0.01;
+
 	UPROPERTY(Category = "Teleport Settings", EditDefaultsOnly)
 	FVector ZPlaneLineTraceOffset = FVector(0, 0, 20000.f);
+
+	FTimerHandle PaintSplatterDelay;
+
+	FTimerDelegate PaintSplatterDelegate;
 
 private:
 	virtual void ServerExecuteAbility_Implementation() override;
@@ -54,7 +67,8 @@ private:
 
 	void TeleportToLocation(const FVector LocationToTeleportTo);
 
-	void SplatterPaint(const FVector& SplatterOrigin, const int32 NumLatitudeSegments, const int32 NumLongitudeSegments);
+	UFUNCTION()
+	void SplatterPaint(const FVector& SplatterOrigin);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void PaintSurface(const FVector& Origin, const TArray<FVector>& EndTraceLocations);
