@@ -22,7 +22,10 @@ protected:
 	float ScanSpeed = -0.3f;
 
 	UPROPERTY(Category = "Scan Properties", EditDefaultsOnly)
-	float Range = 3.0f;
+	float ScanRange = 3.0f;
+
+	UPROPERTY(Category = "Scan Projectile Properties", EditDefaultsOnly)
+	float ScanProjectileRange = 1000.0f;
 
 protected:
 	virtual void BeginPlay();
@@ -32,6 +35,8 @@ private:
 
 	TArray<APaintableActorBase*> GetScannableActors();
 
+	FVector FindScanOrigin();
+
 	UFUNCTION(Client, Reliable)
-	void ScanActors(const TArray<APaintableActorBase*>& ActorsToScan);
+	void ScanActors(const TArray<APaintableActorBase*>& ActorsToScan, const FVector& ScanOrigin);
 };

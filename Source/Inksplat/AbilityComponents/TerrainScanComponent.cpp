@@ -3,6 +3,7 @@
 
 #include "TerrainScanComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "../PlayerActor/PlayerCharacter.h"
 #include "../PaintableGeometry/PaintableActorBase.h"
 #include "Net/UnrealNetwork.h"
@@ -21,7 +22,8 @@ void UTerrainScanComponent::BeginPlay()
 void UTerrainScanComponent::ServerExecuteAbility_Implementation()
 {
 	TArray<APaintableActorBase*> ActorsWithinRange = GetScannableActors();
-	ScanActors(ActorsWithinRange);
+	FVector ScanOrigin = FindScanOrigin();
+	ScanActors(ActorsWithinRange, ScanOrigin);
 	BeginCoolDown();
 }
 
@@ -39,16 +41,44 @@ TArray<APaintableActorBase*> UTerrainScanComponent::GetScannableActors()
 	return ActorsWithinRange;
 }
 
-
-void UTerrainScanComponent::ScanActors_Implementation(const TArray<APaintableActorBase*>& ActorsToScan)
+FVector UTerrainScanComponent::FindScanOrigin()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Num actors are %i"), ActorsToScan.Num());
-	FVector ScanOrigin = GetOwner()->GetActorLocation() + GetOwner()->GetActorForwardVector() * 500;
+	FHitResult Hit;
+	TArray<AActor*> AllPlayers;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacter::StaticClass(), AllPlayers);
+	FCollisionQueryParams TraceParams;
+	TraceParams.bTraceComplex = false;
+	TraceParams.AddIgnoredActors(AllPlayers);
+
+	FVector TraceBegin = GetOwner()->GetActorLocation();
+	FVector PlayerForwardDirection = GetOwner()->GetActorForwardVector().GetSafeNormal();
+	FVector TraceEnd = TraceBegin + (PlayerForwardDirection * 1000);
+
+	bool bHitWorldGeometry = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		TraceBegin,
+		TraceEnd,
+		ECC_Visibility,
+		TraceParams
+	);
+
+	if (bHitWorldGeometry)
+	{
+		return Hit.Location;
+	}
+	
+	return TraceEnd;
+}
+
+void UTerrainScanComponent::ScanActors_Implementation(const TArray<APaintableActorBase*>& ActorsToScan, const FVector& ScanOrigin)
+{
+	//FVector PlayerForwardDirection = GetOwner()->GetActorForwardVector().GetSafeNormal();
+	//FVector ScanOrigin = GetOwner()->GetActorLocation() + (PlayerForwardDirection * 1000);
 	for (APaintableActorBase* ActorToScan : ActorsToScan)
 	{
 		if (ActorToScan != nullptr)
 		{
-			ActorToScan->ScanActor(ScanSpeed, Range, ScanOrigin);
+			ActorToScan->ScanActor(ScanSpeed, ScanRange, ScanOrigin);
 		}
 	}
 }
