@@ -43,11 +43,12 @@ TArray<APaintableActorBase*> UTerrainScanComponent::GetScannableActors()
 void UTerrainScanComponent::ScanActors_Implementation(const TArray<APaintableActorBase*>& ActorsToScan)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Num actors are %i"), ActorsToScan.Num());
+	FVector ScanOrigin = GetOwner()->GetActorLocation() + GetOwner()->GetActorForwardVector() * 500;
 	for (APaintableActorBase* ActorToScan : ActorsToScan)
 	{
 		if (ActorToScan != nullptr)
 		{
-			ActorToScan->ScanActor(ScanSpeed, Range);
+			ActorToScan->ScanActor(ScanSpeed, Range, ScanOrigin);
 		}
 	}
 }

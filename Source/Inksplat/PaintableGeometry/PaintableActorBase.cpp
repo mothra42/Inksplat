@@ -49,7 +49,7 @@ void APaintableActorBase::PaintActor(const FHitResult& Hit,
 	}
 }
 
-void APaintableActorBase::ScanActor(const float ScanSpeed, const float Range)
+void APaintableActorBase::ScanActor(const float ScanSpeed, const float Range, const FVector& ScanOrigin)
 {
 	TArray<UActorComponent*> PaintableMeshes = GetComponentsByClass(UScannableStaticMesh::StaticClass());
 	UE_LOG(LogTemp, Warning, TEXT("Scanning Actor"));
@@ -58,7 +58,7 @@ void APaintableActorBase::ScanActor(const float ScanSpeed, const float Range)
 		UScannableStaticMesh* ScannableMesh = Cast<UScannableStaticMesh>(Mesh);
 		if (ScannableMesh != nullptr)
 		{
-			ScannableMesh->ScanMesh(ScanSpeed, Range);
+			ScannableMesh->ScanMesh(ScanSpeed, Range, ScanOrigin);
 		}
 	}
 }

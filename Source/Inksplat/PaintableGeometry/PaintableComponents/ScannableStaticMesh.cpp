@@ -29,11 +29,12 @@ void UScannableStaticMesh::BeginPlay()
 	SetMaterial(0, MeshMaterialInstance);
 }
 
-void UScannableStaticMesh::ScanMesh(const float ScanSpeed, const float RangeToSet)
+void UScannableStaticMesh::ScanMesh(const float ScanSpeed, const float RangeToSet, const FVector& ScanOrigin)
 {
 	MaxRange = RangeToSet;
 
 	MeshMaterialInstance->SetScalarParameterValue(FName("ScanSpeed"), ScanSpeed);
+	MeshMaterialInstance->SetVectorParameterValue(FName("ScanOrigin"), ScanOrigin);
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle_ProgressScan,
 		this,

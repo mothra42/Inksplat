@@ -16,7 +16,7 @@ class INKSPLAT_API UScannableStaticMesh : public UStaticMeshComponent
 public:
 	UScannableStaticMesh();
 
-	void ScanMesh(const float ScanSpeed, const float RangeToSet);
+	void ScanMesh(const float ScanSpeed, const float RangeToSet, const FVector& ScanOrigin);
 
 	void ProgressScan();
 
