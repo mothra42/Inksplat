@@ -10,6 +10,9 @@ UCLASS()
 class INKSPLAT_API APaintOrb : public AActor
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	class UPaintableStaticMeshComponent* OrbMesh;
 	
 public:	
 	// Sets default values for this actor's properties
