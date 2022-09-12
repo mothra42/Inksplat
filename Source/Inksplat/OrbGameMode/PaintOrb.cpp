@@ -2,7 +2,7 @@
 
 
 #include "PaintOrb.h"
-#include "../PaintableGeometry/PaintableComponents/PaintableStaticMeshComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 APaintOrb::APaintOrb()
@@ -10,9 +10,10 @@ APaintOrb::APaintOrb()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	OrbMesh = CreateDefaultSubobject<UPaintableStaticMeshComponent>(TEXT("OrbMesh"));
+	OrbMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OrbMesh"));
 	OrbMesh->SetupAttachment(RootComponent);
-	OrbMesh->SetIsReplicated(true);
+
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -27,6 +28,11 @@ void APaintOrb::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void APaintOrb::Activate()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Orb is activated"));
 }
 
 //Things an orb must do

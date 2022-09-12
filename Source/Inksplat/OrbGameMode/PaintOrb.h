@@ -12,7 +12,7 @@ class INKSPLAT_API APaintOrb : public AActor
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	class UPaintableStaticMeshComponent* OrbMesh;
+	class UStaticMeshComponent* OrbMesh;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -25,5 +25,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	void Activate();
 
 };
