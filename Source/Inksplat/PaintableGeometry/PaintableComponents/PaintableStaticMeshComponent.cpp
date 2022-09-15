@@ -33,6 +33,8 @@ UPaintableStaticMeshComponent::UPaintableStaticMeshComponent()
 		BrushMaterial = BrushMaterialFinder.Object;
 	}
 
+	bPaintHitLocationOnly = true;
+
 	SetIsReplicated(true);
 }
 
@@ -76,9 +78,18 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 	UGameplayStatics::FindCollisionUV(Hit, UVChannelToPaint, UVPosition);
 	FVector MaterialStretch;
 	float MaterialScale;
-	
+
 	CalculateUVStretchAndScale(Hit, UVPosition, MaterialScale, MaterialStretch);
 	MaterialScale *= ScaleModifier;
+	
+	//If the material should be painted fully even if only one spot is hit.
+	if (!bPaintHitLocationOnly)
+	{
+		//TODO work on this scale modifier math.
+		MaterialScaleModifier += (0.5 * MaterialScaleModifier);
+		MaterialScale *= MaterialScaleModifier;
+	}
+
 	BrushMaterialInstance->SetVectorParameterValue(FName("UVTransform"), FLinearColor(UVPosition.X, UVPosition.Y, 0));
 	BrushMaterialInstance->SetVectorParameterValue(FName("Stretch"), FLinearColor(MaterialStretch));
 	BrushMaterialInstance->SetScalarParameterValue(FName("Scale"), MaterialScale);
@@ -87,8 +98,8 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 	{
 		BrushMaterialInstance->SetTextureParameterValue(FName("PaintTexture"), PaintHelper->GetPaintSplatTexture());
 	}
-	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
 
+	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
 	return true;
 }
 

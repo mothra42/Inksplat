@@ -6,9 +6,6 @@
 #include "Components/StaticMeshComponent.h"
 #include "PaintableStaticMeshComponent.generated.h"
 
-/**
- * 
- */
 UCLASS(meta = (BlueprintSpawnableComponent))
 class INKSPLAT_API UPaintableStaticMeshComponent : public UStaticMeshComponent
 {
@@ -22,7 +19,6 @@ public:
 	bool PaintMesh(const FHitResult& Hit, const FLinearColor& Color, const float ScaleModifier);
 
 protected:
-	
 	UPROPERTY(VisibleAnywhere)
 	class UTextureRenderTarget2D* PaintTexture;
 
@@ -49,6 +45,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Painting Settings")
 	int32 UVChannelToPaint = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Painting Settings")
+	bool bPaintHitLocationOnly = true;
+
+	//TODO move this to the player or weapon class
+	float MaterialScaleModifier = 1.0f;
 
 	FVector CalculatePaintScale(FVector Normal);
 
