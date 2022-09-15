@@ -49,10 +49,23 @@ void APaintableActorBase::PaintActor(const FHitResult& Hit,
 	}
 }
 
+void APaintableActorBase::CalculatePaintCoverage(const FHitResult& Hit)
+{
+	UPaintableStaticMeshComponent* HitStaticMeshComp = Cast<UPaintableStaticMeshComponent>(Hit.Component);
+	UPaintableSkeletalMeshComponent* HitSkeletalMeshComp = Cast<UPaintableSkeletalMeshComponent>(Hit.Component);
+	if (HitStaticMeshComp)
+	{
+		HitStaticMeshComp->CalculatePaintCoverage(Hit);
+	}
+	//else if (HitSkeletalMeshComp)
+	//{
+	//	HitSkeletalMeshComp->PaintMesh(Hit, Color);
+	//}
+}
+
 void APaintableActorBase::ScanActor(const float ScanSpeed, const float Range, const FVector& ScanOrigin)
 {
 	TArray<UActorComponent*> PaintableMeshes = GetComponentsByClass(UScannableStaticMesh::StaticClass());
-	UE_LOG(LogTemp, Warning, TEXT("Scanning Actor"));
 	for (UActorComponent* Mesh : PaintableMeshes)
 	{
 		UScannableStaticMesh* ScannableMesh = Cast<UScannableStaticMesh>(Mesh);

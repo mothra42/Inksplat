@@ -35,12 +35,16 @@ UPaintableStaticMeshComponent::UPaintableStaticMeshComponent()
 
 	bPaintHitLocationOnly = true;
 
+	PaintCoverageArray.Init(0, 2048);
+
 	SetIsReplicated(true);
 }
 
 void UPaintableStaticMeshComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UPaintableStaticMeshComponent, NumPaintedTiles);
+	DOREPLIFETIME(UPaintableStaticMeshComponent, LastHitLocation);
 }
 
 void UPaintableStaticMeshComponent::BeginPlay()
@@ -76,6 +80,7 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 {
 	FVector2D UVPosition;
 	UGameplayStatics::FindCollisionUV(Hit, UVChannelToPaint, UVPosition);
+	//LastHitLocation = UVPosition;
 	FVector MaterialStretch;
 	float MaterialScale;
 
@@ -100,6 +105,7 @@ bool UPaintableStaticMeshComponent::PaintMesh(const FHitResult& Hit, const FLine
 	}
 
 	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), PaintTexture, BrushMaterialInstance);
+	
 	return true;
 }
 
@@ -155,4 +161,52 @@ FVector UPaintableStaticMeshComponent::CalculatePaintScale(FVector Normal)
 		//xy plane
 		return FVector(MeshScale.X, MeshScale.Y, 0);
 	}
+}
+
+void UPaintableStaticMeshComponent::OnRep_LastHitLocation()
+{
+	//if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	//{
+		//UE_LOG(LogTemp, Warning, TEXT("Calculating in the server"));
+		//CalculatePaintCoverage();
+	//}
+}
+
+float UPaintableStaticMeshComponent::CalculatePaintCoverage(const FHitResult& Hit)
+{
+	//TODO revisit this calculation to work in line with new painting method
+	/*A Note on some magic numbers being used. 1024 is the size of the texture both U and V.
+	* 1024 * 1024 is 1048576. If I paint squares that are 22.62 X 22.62 then the total pixel count is 512
+	* 1048567 / 512 is 2048. So there are 2048 distinct tiles of 512 pixels. Which is where these numbers come from.
+	* TODO codify these magic numbers into actual expressions.
+	*/
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		FVector2D UVPosition;
+		UGameplayStatics::FindCollisionUV(Hit, UVChannelToPaint, UVPosition);
+
+		int32 PaintedTile = (UVPosition.X + UVPosition.Y * 1024) / 512;
+		if (PaintedTile < 0 || PaintedTile >= 2048)
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Invalid Tile"));
+			return NumPaintedTiles / MaxPaintedTiles;
+		}
+		else if (!PaintCoverageArray[PaintedTile])
+		{
+			NumPaintedTiles++;
+			PaintCoverageArray[PaintedTile] = 1;
+		}
+
+		//UpdateParentHealth();
+		UE_LOG(LogTemp, Warning, TEXT("NumPaintedTiles is %i"), NumPaintedTiles);
+		UE_LOG(LogTemp, Warning, TEXT("Ratio is %f"), NumPaintedTiles / MaxPaintedTiles);
+		return NumPaintedTiles / MaxPaintedTiles;
+	}
+
+	return 0.f;
+}
+
+void UPaintableStaticMeshComponent::OnRep_NumPaintedTiles()
+{
+	//UpdateParentHealth();
 }

@@ -24,14 +24,14 @@ class AInksplatProjectile : public AActor
 
 
 protected:
-	UPROPERTY(ReplicatedUsing=OnRep_MeshHit)
-	FVector HitLocation;
-
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_MeshHit)
 	FHitResult HitResult;
 
 	UPROPERTY(Replicated)
 	class APlayerCharacter* OwningPlayer;
+
+private:
+	FHitResult FindPaintLocation(const FVector TraceBegin, const FVector TraceEnd);
 
 protected:
 	virtual void BeginPlay() override;

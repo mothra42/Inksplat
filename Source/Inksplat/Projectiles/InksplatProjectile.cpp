@@ -53,7 +53,6 @@ void AInksplatProjectile::BeginPlay()
 void AInksplatProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AInksplatProjectile, HitLocation);
 	DOREPLIFETIME(AInksplatProjectile, HitResult);
 	DOREPLIFETIME(AInksplatProjectile, OwningPlayer);
 }
@@ -62,10 +61,14 @@ void AInksplatProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, 
 {
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
-		HitLocation = Hit.ImpactPoint;
-		HitResult = Hit;
 		SetActorHiddenInGame(true);
 		CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			FVector TraceEndLocation = Hit.ImpactPoint - (100 * Hit.ImpactNormal);
+			HitResult = FindPaintLocation(Hit.ImpactPoint, TraceEndLocation);
+		}
 	}
 }
 
@@ -82,10 +85,8 @@ void AInksplatProjectile::Destroyed()
 	//TODO make paint particle effect spawn here.
 }
 
-void AInksplatProjectile::PaintActor()
+FHitResult AInksplatProjectile::FindPaintLocation(const FVector TraceBegin, const FVector TraceEnd)
 {
-	FVector TraceEndLocation = HitLocation - (100 * HitResult.ImpactNormal);
-
 	FHitResult LineTraceHit;
 	FCollisionQueryParams TraceParams;
 	TraceParams.bTraceComplex = true;
@@ -93,8 +94,8 @@ void AInksplatProjectile::PaintActor()
 	TraceParams.bReturnFaceIndex = true;
 	GetWorld()->LineTraceSingleByChannel(
 		LineTraceHit,
-		HitLocation,
-		TraceEndLocation,
+		TraceBegin,
+		TraceEnd,
 		ECC_Camera,
 		TraceParams
 	);
@@ -102,9 +103,22 @@ void AInksplatProjectile::PaintActor()
 	IPaintableObjectInterface* PaintableObject = Cast<IPaintableObjectInterface>(LineTraceHit.Actor);
 	if (PaintableObject)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Paint Color is %s in projectile"), *PaintColor.ToString());
-		//PaintableObject->PaintActor(LineTraceHit, PaintColor);
-		PaintableObject->PaintActor(LineTraceHit, OwningPlayer->GetPaintColor());
+		PaintableObject->CalculatePaintCoverage(LineTraceHit);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Paintable Object is null"));
+	}
+
+	return LineTraceHit;
+}
+
+void AInksplatProjectile::PaintActor()
+{
+	IPaintableObjectInterface* PaintableObject = Cast<IPaintableObjectInterface>(HitResult.Actor);
+	if (PaintableObject)
+	{
+		PaintableObject->PaintActor(HitResult, OwningPlayer->GetPaintColor());
 	}
 	else
 	{

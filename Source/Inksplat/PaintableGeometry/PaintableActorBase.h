@@ -32,6 +32,8 @@ public:
 		float TempPaintLifetime = 0.f,
 		const float ScaleModifier = 1.0f) override;
 
+	virtual void CalculatePaintCoverage(const FHitResult& Hit) override;
+
 	virtual void ScanActor(const float ScanSpeed, const float Range, const FVector& ScanOrigin);
 
 };
